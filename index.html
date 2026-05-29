@@ -101,6 +101,62 @@
   }
   .btn-refresh:hover { background: var(--gray-light); color: var(--text); }
 
+  /* Nav Tabs */
+  .nav-tabs { display:flex; gap:0; margin-left:12px; }
+  .nav-tab { padding:0 14px; height:56px; font-size:13px; font-family:var(--sans); font-weight:500; color:var(--text-muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; transition:all 0.15s; white-space:nowrap; }
+  .nav-tab:hover { color:var(--text); }
+  .nav-tab.active { color:var(--pink); border-bottom-color:var(--pink); }
+  .page { display:none; }
+  .page.active { display:block; }
+  .tool-wrap { max-width:700px; margin:0 auto; padding:20px 16px 40px; }
+  .t-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px; }
+  .t-title { font-size:11px; font-weight:600; color:var(--text-muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .t-title span { color:var(--pink); font-size:14px; }
+  .t-ta { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--sans); font-size:13px; padding:12px; resize:vertical; min-height:130px; outline:none; }
+  .t-ta:focus { border-color:var(--pink); }
+  .t-r2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+  .t-f { display:flex; flex-direction:column; gap:6px; }
+  .t-lbl { font-size:11px; font-weight:600; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; }
+  .t-in { background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--sans); font-size:14px; padding:10px 12px; outline:none; width:100%; }
+  .t-in:focus { border-color:var(--pink); }
+  .t-tag { display:inline-flex; font-size:10px; padding:2px 7px; border-radius:4px; font-weight:600; margin-left:4px; }
+  .t-tag-a { background:var(--green-light); color:var(--green); }
+  .t-tag-m { background:var(--pink-light); color:var(--pink); }
+  .tb { font-family:var(--sans); font-size:13px; font-weight:600; padding:10px 18px; border-radius:8px; cursor:pointer; transition:all 0.15s; border:none; }
+  .tb-parse { background:var(--gray-light); color:var(--text); border:1px solid var(--border); }
+  .tb-parse:hover { border-color:var(--pink); color:var(--pink); }
+  .tb-push { background:var(--pink); color:#fff; }
+  .tb-push:hover { background:var(--pink-dark); }
+  .tb-push:disabled { background:var(--border); color:var(--text-muted); cursor:not-allowed; }
+  .tb-clear { background:transparent; color:var(--text-muted); border:1px solid var(--border); }
+  .tb-clear:hover { color:var(--red); border-color:var(--red); }
+  .t-api { font-family:var(--mono); font-size:10px; color:var(--text-muted); background:var(--bg); border:1px solid var(--border); padding:6px 10px; border-radius:6px; word-break:break-all; margin-bottom:12px; }
+  .t-st { display:none; align-items:center; gap:10px; padding:11px 14px; border-radius:8px; font-size:13px; margin-top:10px; }
+  .t-st.show { display:flex; }
+  .t-st-ok { background:var(--green-light); border:1px solid rgba(15,110,86,0.2); color:var(--green); }
+  .t-st-err { background:var(--red-light); border:1px solid rgba(163,45,45,0.2); color:var(--red); }
+  .t-st-load { background:var(--pink-light); border:1px solid rgba(212,83,126,0.2); color:var(--pink); }
+  .t-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .t-dot-ok { background:var(--green); }
+  .t-dot-err { background:var(--red); }
+  .t-dot-load { background:var(--pink); animation:spin 1s linear infinite; }
+  .s-bar { display:flex; gap:8px; margin-bottom:1.5rem; }
+  .s-in { flex:1; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:var(--sans); outline:none; background:var(--surface); }
+  .s-in:focus { border-color:var(--pink); }
+  .s-btn { padding:10px 18px; background:var(--text); color:#fff; border:none; border-radius:8px; font-size:13px; font-family:var(--sans); cursor:pointer; }
+  .s-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:13px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; }
+  .s-info { flex:1; min-width:0; }
+  .s-name { font-size:14px; font-weight:500; word-break:break-all; }
+  .s-meta { font-size:12px; color:var(--text-muted); margin-top:3px; }
+  .s-badge { font-size:11px; padding:3px 9px; border-radius:20px; white-space:nowrap; flex-shrink:0; }
+  .s-b1 { background:var(--amber-light); color:var(--amber); }
+  .s-b2 { background:var(--green-light); color:var(--green); }
+  .s-b3 { background:var(--red-light); color:var(--red); }
+  .s-copy { border:1px solid var(--border); background:var(--surface); color:var(--text-muted); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:12px; font-family:var(--sans); white-space:nowrap; flex-shrink:0; transition:all 0.15s; }
+  .s-copy:hover { background:var(--bg); }
+  .s-copy.copied { color:var(--green); border-color:var(--green); background:var(--green-light); }
+  .s-empty { text-align:center; color:var(--text-muted); font-size:13px; padding:2rem 0; }
+
   /* ── Filter Bar ── */
   .filter-bar {
     background: var(--surface);
@@ -353,6 +409,11 @@
 <header>
   <span class="logo-pill">PT</span>
   <h1>Polaroid Tamsung</h1>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
+    <button class="nav-tab" onclick="switchTab('search',this)">📁 ค้นหา</button>
+    <button class="nav-tab" onclick="switchTab('parser',this)">➕ เพิ่มออเดอร์</button>
+  </div>
   <div class="header-right">
     <span id="clock"></span>
     <button class="btn-refresh" onclick="loadData()">
@@ -361,15 +422,89 @@
   </div>
 </header>
 
-<div class="filter-bar">
+<div class="page active" id="fb-page"><div class="filter-bar">
   <span class="filter-label">กรอง:</span>
   <button class="filter-chip active" onclick="setFilter('all',this)">ทั้งหมด</button>
   <button class="filter-chip" onclick="setFilter('1',this)">งานไว</button>
   <button class="filter-chip" onclick="setFilter('2',this)">งานหลัก</button>
   <button class="filter-chip" onclick="setFilter('3',this)">งานใหญ่</button>
+</div></div>
+
+<div class="page active" id="page-dashboard"><main id="main"></main></div>
+
+
+<!-- PAGE: ค้นหา -->
+<div class="page" id="page-search">
+  <div class="tool-wrap">
+    <div class="t-card">
+      <h2 style="font-size:16px;font-weight:500;margin-bottom:4px;">📁 ค้นหาชื่อโฟลเดอร์</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">ค้นหาด้วยรหัสออเดอร์หรือชื่อลูกค้า</p>
+      <div class="s-bar">
+        <input class="s-in" type="text" id="sInput" placeholder="PT-00001 หรือ ชื่อลูกค้า" oninput="doSearch()" />
+        <button class="s-btn" onclick="doSearch()">🔍 ค้นหา</button>
+      </div>
+      <div id="sResults"><div class="s-empty">⏳ กำลังโหลดข้อมูล...</div></div>
+    </div>
+  </div>
 </div>
 
-<main id="main"></main>
+<!-- PAGE: เพิ่มออเดอร์ -->
+<div class="page" id="page-parser">
+  <div class="tool-wrap">
+    <div class="t-card">
+      <div class="t-title"><span>①</span> ข้อความออเดอร์ + ที่อยู่</div>
+      <textarea class="t-ta" id="rawText" placeholder="Paste ข้อความออเดอร์จาก LINE ทั้งหมด..."></textarea>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="tb tb-parse" onclick="parseOrder()">🔍 Parse ข้อมูล</button>
+        <button class="tb tb-clear" onclick="clearParser()">ล้าง</button>
+      </div>
+    </div>
+    <div class="t-card">
+      <div class="t-title"><span>②</span> ตรวจสอบและแก้ไข</div>
+      <div class="t-r2">
+        <div class="t-f">
+          <div class="t-lbl">รหัสออเดอร์ <span class="t-tag t-tag-m">กรอกเอง</span></div>
+          <input class="t-in" type="text" id="pOrderId" placeholder="PT-00132" />
+        </div>
+        <div class="t-f">
+          <div class="t-lbl">รอบจัดส่ง <span class="t-tag t-tag-a">auto</span></div>
+          <input class="t-in" type="text" id="pShipDate" placeholder="30/05/2026" />
+        </div>
+      </div>
+      <div class="t-r2">
+        <div class="t-f">
+          <div class="t-lbl">ชื่อผู้รับ <span class="t-tag t-tag-a">auto</span></div>
+          <input class="t-in" type="text" id="pName" placeholder="ชื่อ-นามสกุล" />
+        </div>
+        <div class="t-f">
+          <div class="t-lbl">เบอร์โทร <span class="t-tag t-tag-a">auto</span></div>
+          <input class="t-in" type="text" id="pPhone" placeholder="08XXXXXXXX" />
+        </div>
+      </div>
+      <div class="t-f" style="margin-bottom:12px;">
+        <div class="t-lbl">จังหวัด <span class="t-tag t-tag-a">auto</span></div>
+        <input class="t-in" type="text" id="pProvince" placeholder="จังหวัด..." />
+      </div>
+      <div class="t-f" style="margin-bottom:12px;">
+        <div class="t-lbl">ที่อยู่เต็ม (col L) <span class="t-tag t-tag-a">auto</span></div>
+        <textarea class="t-ta" id="pAddress" style="min-height:75px;" placeholder="ชื่อ + ที่อยู่ + เบอร์"></textarea>
+      </div>
+      <div class="t-f">
+        <div class="t-lbl">รายการสินค้า <span class="t-tag t-tag-a">auto</span></div>
+        <textarea class="t-ta" id="pItems" style="min-height:65px;" placeholder="รายการสินค้า..."></textarea>
+      </div>
+    </div>
+    <div class="t-card">
+      <div class="t-title"><span>③</span> Push เข้า Google Sheet</div>
+      <div class="t-api">https://script.google.com/macros/s/AKfycbyYgGTwLc7nH8hfvskGcmUCfBYkq7WwDXaRu56KfjWbFopETMsAHE1yQ6XJUPzbK78D/exec</div>
+      <button class="tb tb-push" onclick="pushOrder()" id="btnPush">🚀 Push เข้า Sheet</button>
+      <div class="t-st" id="pStatus">
+        <div class="t-dot" id="pDot"></div>
+        <span id="pMsg"></span>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 // ════════════════════════════════════
@@ -377,40 +512,16 @@
 // ════════════════════════════════════
 const SHEET_ID  = '14oLUa0F6VlCxQ2LZGsJgV4oGXICylQPC6vO_aq6deiI';
 const API_KEY   = 'AIzaSyCLhgZL3uWKQsVXDNrzsE6EVuIp-dGDe3s';
-const TAB_NAME  = 'data';   // ← เปลี่ยนถ้าชื่อ Tab ต่างกัน
+const TAB_NAME  = 'ชีต 1';   // ← เปลี่ยนถ้าชื่อ Tab ต่างกัน
 // ════════════════════════════════════
 
 const COL = { name:1, date:4, orderId:6, level:14, detail:13 }; // 0-indexed จาก col A (N=index13)
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxERjMZn__iAQ5BJlI1jWBRlbUixYLuA_wC-rk7kt3HLbkFXMvp8bcrqmKdF5NTV04H/exec';
-
 let allOrders = [];
 let currentFilter = 'all';
-let doneSet = new Set();
+let doneSet = new Set(JSON.parse(localStorage.getItem('pt_done')||'[]'));
 
-async function markDone(id, checked){
-  // ซ่อนแถวทันที ไม่รอ response
-  if(checked){
-    const row = document.getElementById('row-'+id);
-    if(row){ row.style.opacity='0'; setTimeout(renderAll,350); }
-  } else {
-    renderAll();
-  }
-
-  // ส่งข้อมูลไป Apps Script → Sheets
-  try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId: id, done: checked })
-    });
-    // รีเฟรชข้อมูลจาก Sheets หลังอัปเดต
-    setTimeout(loadData, 1500);
-  } catch(e) {
-    console.error('บันทึกไม่สำเร็จ:', e);
-  }
-}
+function saveDone(){ localStorage.setItem('pt_done', JSON.stringify([...doneSet])); }
 
 // Clock
 function updateClock(){
@@ -461,7 +572,7 @@ async function loadData(){
   document.getElementById('main').innerHTML = '<div class="status-box">⏳ กำลังดึงข้อมูล...</div>';
 
   try{
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!A2:P?key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!A2:O?key=${API_KEY}`;
     const res = await fetch(url);
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
@@ -473,10 +584,9 @@ async function loadData(){
         name:  (r[COL.name]||'').trim(),
         date:  parseDate(r[COL.date]),
         level: parseInt(r[COL.level])||0,
-        detail:(r[COL.detail]||'').trim(),
-        done:  (r[15]||'').toString().toUpperCase() === 'TRUE'
+        detail:(r[COL.detail]||'').trim()
       }))
-      .filter(o=> o.id && o.level>=1 && o.level<=3 && !o.done);
+      .filter(o=> o.id && o.level>=1 && o.level<=3);
 
     renderAll();
   } catch(e){
@@ -568,7 +678,7 @@ function rowHTML(o){
     <span class="cell-check">
       <input type="checkbox" title="ทำเครื่องหมายเสร็จ"
         onclick="event.stopPropagation()"
-        onchange="markDone('${o.id}',this.checked); if(this.checked){ const r=document.getElementById('row-${o.id}'); r.style.textDecoration='line-through'; r.style.opacity='0.4'; }">
+        onchange="markDone('${o.id}',this.checked)">
     </span>
     ${hasDetail?`<div class="detail-panel" id="detail-${o.id}">📦 ${detailLines}</div>`:''}
   </div>`;
@@ -580,8 +690,188 @@ function toggleDetail(id){
   panel.classList.toggle('open');
 }
 
+function markDone(id, checked){
+  if(checked){
+    doneSet.add(id); saveDone();
+    const row = document.getElementById('row-'+id);
+    if(row){ row.style.opacity='0'; setTimeout(renderAll,350); }
+  } else {
+    doneSet.delete(id); saveDone(); renderAll();
+  }
+}
+
 // ── Init ──────────────────────────────
 loadData();
 </script>
 </body>
 </html>
+
+
+<script>
+// ===== TAB SWITCH =====
+function switchTab(tab, el) {
+  // ซ่อน/แสดง filter bar เฉพาะ dashboard
+  const fb = document.getElementById('fb-page');
+  if (fb) fb.style.display = (tab === 'dashboard') ? '' : 'none';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  el.classList.add('active');
+}
+
+// ===== SEARCH =====
+const SEARCH_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+let sOrders = [];
+const sLevelLabel = { '1':'งานไว','2':'งานหลัก','3':'งานใหญ่' };
+const sLevelClass  = { '1':'s-b1','2':'s-b2','3':'s-b3' };
+
+function sCellDate(cell) {
+  if (!cell) return null;
+  const raw = cell.v;
+  if (!raw) return null;
+  if (typeof raw === 'string') {
+    const dm = raw.match(/Date\((\d+),(\d+),(\d+)\)/);
+    if (dm) return new Date(+dm[1], +dm[2], +dm[3]);
+    const m1 = raw.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+    if (m1) return new Date(2500+parseInt(m1[3])-543, parseInt(m1[2])-1, parseInt(m1[1]));
+    const m2 = raw.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m2) return new Date(+m2[3], parseInt(m2[2])-1, parseInt(m2[1]));
+  }
+  return null;
+}
+function sFmt(dt) {
+  if (!dt) return '';
+  const dd = String(dt.getDate()).padStart(2,'0');
+  const mm = String(dt.getMonth()+1).padStart(2,'0');
+  const yy = String(dt.getFullYear()+543).slice(-2);
+  return `${dd}-${mm}-${yy}`;
+}
+function sFolderName(o) {
+  return [o.id, o.name, o.deadline, sLevelLabel[o.level]||''].filter(Boolean).join(' ');
+}
+
+async function loadSearchData() {
+  try {
+    const res = await fetch(SEARCH_SHEET_URL);
+    const text = await res.text();
+    const json = JSON.parse(text.replace(/^[^(]+\(/,'').replace(/\);?\s*$/,''));
+    sOrders = [];
+    for (const row of json.table.rows) {
+      const c = row.c || [];
+      const id = c[6]?.v?.toString().trim() || '';
+      const name = c[1]?.v?.toString().trim() || '';
+      const levelRaw = c[14]?.v;
+      const level = (levelRaw!=null) ? String(Math.round(Number(levelRaw))) : '';
+      if (!id.startsWith('PT-')) continue;
+      const dt = sCellDate(c[4]);
+      const display = sFmt(dt);
+      const ddl = dt ? (() => { const d=new Date(dt); d.setDate(d.getDate()-1); return sFmt(d); })() : '';
+      sOrders.push({ id, name, shipDate: display, deadline: ddl, level });
+    }
+    document.getElementById('sResults').innerHTML = '<div class="s-empty">พิมพ์รหัสออเดอร์หรือชื่อลูกค้าเพื่อค้นหาค่ะ</div>';
+  } catch(e) {
+    document.getElementById('sResults').innerHTML = '<div class="s-empty">❌ โหลดข้อมูลไม่สำเร็จค่ะ</div>';
+  }
+}
+
+function doSearch() {
+  const q = document.getElementById('sInput').value.trim().toLowerCase();
+  const el = document.getElementById('sResults');
+  if (!q) { el.innerHTML = '<div class="s-empty">พิมพ์รหัสออเดอร์หรือชื่อลูกค้าเพื่อค้นหาค่ะ</div>'; return; }
+  const found = sOrders.filter(o => o.id.toLowerCase().includes(q) || o.name.toLowerCase().includes(q));
+  if (!found.length) { el.innerHTML = '<div class="s-empty">ไม่พบออเดอร์ที่ค้นหาค่ะ</div>'; return; }
+  el.innerHTML = `<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">พบ ${found.length} รายการ</div>` +
+    found.map((o, i) => {
+      const fn = sFolderName(o);
+      return `<div class="s-card">
+        <span style="font-size:20px;flex-shrink:0;">📁</span>
+        <div class="s-info">
+          <div class="s-name">${fn}</div>
+          <div class="s-meta">รอบจัดส่ง: ${o.shipDate} &nbsp;|&nbsp; เดดไลน์: ${o.deadline}</div>
+        </div>
+        ${sLevelLabel[o.level]?`<span class="s-badge ${sLevelClass[o.level]}">${sLevelLabel[o.level]}</span>`:''}
+        <button class="s-copy" id="sc-${i}" onclick="sCopy('${fn.replace(/'/g,"\\'")}',${i})">📋 ก๊อปปี้</button>
+      </div>`;
+    }).join('');
+}
+
+function sCopy(text, i) {
+  const done = () => {
+    const btn = document.getElementById('sc-'+i);
+    btn.classList.add('copied'); btn.textContent = '✅ คัดลอก';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '📋 ก๊อปปี้'; }, 2000);
+  };
+  navigator.clipboard?.writeText(text).then(done).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta); done();
+  });
+}
+
+// ===== PARSER =====
+const PARSER_API = 'https://script.google.com/macros/s/AKfycbyYgGTwLc7nH8hfvskGcmUCfBYkq7WwDXaRu56KfjWbFopETMsAHE1yQ6XJUPzbK78D/exec';
+
+function parseOrder() {
+  const raw = document.getElementById('rawText').value.trim();
+  if (!raw) return;
+  const nameMatch = raw.match(/^([^\n]+)\n.*(?:ม\.|ต\.|อ\.|จ\.|ถ\.|ซ\.|หมู่|เลขที่)/m);
+  if (nameMatch) document.getElementById('pName').value = nameMatch[1].trim();
+  const phoneMatch = raw.match(/(?:T\.|Tel\.?|โทร\.?|เบอร์[^\d]*)?[:\s]*(0[6-9]\d{8})/i);
+  if (phoneMatch) document.getElementById('pPhone').value = phoneMatch[1];
+  const provMatch = raw.match(/จ\.\s*([^\s\d\n,]+(?:\s+[^\s\d\n,]+)?)|จังหวัด\s*([^\s\d\n,]+)/);
+  if (provMatch) document.getElementById('pProvince').value = (provMatch[1]||provMatch[2]).trim();
+  const dateMatch = raw.match(/รอบจัดส่ง[^:]*:\s*(\d{1,2}\/\d{1,2}\/\d{4})/);
+  if (dateMatch) document.getElementById('pShipDate').value = dateMatch[1];
+  const itemsMatch = raw.match(/(?:งานพิมพ์รูป|สต๊กเกอร์|Photocard|จัดเซ็ต|Die-cut)([\s\S]*?)(?=ค่าสินค้า|━|$)/i);
+  if (itemsMatch) document.getElementById('pItems').value = itemsMatch[0].trim().replace(/\n+/g,'\n');
+  const name = document.getElementById('pName').value;
+  const phone = document.getElementById('pPhone').value;
+  const addrBlock = raw.match(/(?:\d+\/\d+|\d+\s*ม\.)([\s\S]*?)(?:\d{5})/);
+  if (addrBlock) document.getElementById('pAddress').value = `${name}\n${addrBlock[0].trim()}\nT.${phone}`.trim();
+}
+
+function clearParser() {
+  ['rawText','pOrderId','pName','pPhone','pProvince','pShipDate','pAddress','pItems'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('pStatus').className = 't-st';
+}
+
+async function pushOrder() {
+  const orderId = document.getElementById('pOrderId').value.trim();
+  const name = document.getElementById('pName').value.trim();
+  const phone = document.getElementById('pPhone').value.trim();
+  const province = document.getElementById('pProvince').value.trim();
+  const shipDate = document.getElementById('pShipDate').value.trim();
+  const address = document.getElementById('pAddress').value.trim();
+  const items = document.getElementById('pItems').value.trim();
+  if (!orderId) { showPStatus('err','กรุณากรอกรหัสออเดอร์ก่อนค่ะ'); return; }
+  if (!name) { showPStatus('err','กรุณากรอกชื่อผู้รับก่อนค่ะ'); return; }
+  showPStatus('load','กำลัง push เข้า Sheet...');
+  document.getElementById('btnPush').disabled = true;
+  try {
+    const res = await fetch(PARSER_API, {
+      method: 'POST',
+      body: JSON.stringify({ action:'addOrder', orderId, name, phone, province, shipDate, address, items }),
+      headers: { 'Content-Type':'application/json' }
+    });
+    const json = await res.json();
+    showPStatus(json.ok?'ok':'err', json.msg || (json.ok?'Push สำเร็จค่ะ! ✨':'เกิดข้อผิดพลาดค่ะ'));
+  } catch(e) {
+    showPStatus('err','ไม่สามารถเชื่อมต่อ API ได้: '+e.message);
+  } finally {
+    document.getElementById('btnPush').disabled = false;
+  }
+}
+
+function showPStatus(type, msg) {
+  const bar = document.getElementById('pStatus');
+  const dot = document.getElementById('pDot');
+  bar.className = 't-st show t-st-' + (type==='ok'?'ok':type==='err'?'err':'load');
+  dot.className = 't-dot t-dot-' + (type==='ok'?'ok':type==='err'?'err':'load');
+  document.getElementById('pMsg').textContent = msg;
+}
+
+// load search data ตอนเปิดหน้า
+loadSearchData();
+</script>
