@@ -382,7 +382,7 @@ const TAB_NAME  = 'data';   // ← เปลี่ยนถ้าชื่อ Ta
 
 const COL = { name:1, date:4, orderId:6, level:14, detail:13 }; // 0-indexed จาก col A (N=index13)
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzE4QO-2UFb_hzs39_d1-AtpA0eMZ3bSPePA8yLaKrinGrliV1D1eLp4uvQ7Vplr4hg/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxERjMZn__iAQ5BJlI1jWBRlbUixYLuA_wC-rk7kt3HLbkFXMvp8bcrqmKdF5NTV04H/exec';
 
 let allOrders = [];
 let currentFilter = 'all';
@@ -568,7 +568,7 @@ function rowHTML(o){
     <span class="cell-check">
       <input type="checkbox" title="ทำเครื่องหมายเสร็จ"
         onclick="event.stopPropagation()"
-        onchange="markDone('${o.id}',this.checked)">
+        onchange="markDone('${o.id}',this.checked); if(this.checked){ const r=document.getElementById('row-${o.id}'); r.style.textDecoration='line-through'; r.style.opacity='0.4'; }">
     </span>
     ${hasDetail?`<div class="detail-panel" id="detail-${o.id}">📦 ${detailLines}</div>`:''}
   </div>`;
