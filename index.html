@@ -386,6 +386,7 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzE4QO-2UFb_hzs
 
 let allOrders = [];
 let currentFilter = 'all';
+let doneSet = new Set();
 
 async function markDone(id, checked){
   // ซ่อนแถวทันที ไม่รอ response
