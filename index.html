@@ -413,6 +413,7 @@
     <button class="nav-tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
     <button class="nav-tab" onclick="switchTab('search',this)">📁 ค้นหา</button>
     <button class="nav-tab" onclick="switchTab('parser',this)">➕ เพิ่มออเดอร์</button>
+    <button class="nav-tab" onclick="switchTab('board',this)">📋 บอร์ดสถานะ</button>
   </div>
   <div class="header-right">
     <span id="clock"></span>
@@ -718,6 +719,31 @@ function lockPT(el) {
   el.value = v;
 }
 </script>
+
+<!-- PAGE: บอร์ดสถานะ -->
+<div class="page" id="page-board">
+<div style="max-width:560px;margin:0 auto;padding:16px 16px 60px;">
+
+  <div class="sync-bar" style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-bottom:14px;">
+    <div style="width:6px;height:6px;border-radius:50%;background:var(--text-muted);flex-shrink:0;" id="bSyncDot"></div>
+    <span id="bSyncStatus">กำลังโหลดข้อมูล...</span>
+    <button onclick="bReload()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;color:var(--text-muted);">🔄 รีเฟรช</button>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;" id="bSummary">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;"><div style="font-size:24px;font-weight:700;" id="bTotal">—</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">ทั้งหมด</div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;"><div style="font-size:24px;font-weight:700;" id="bActive">—</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">กำลังดำเนินการ</div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;"><div style="font-size:24px;font-weight:700;" id="bDone">—</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">จัดส่งแล้ว</div></div>
+  </div>
+
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">
+    <div id="bFilterRow" style="display:flex;gap:8px;min-width:max-content;padding-bottom:2px;"></div>
+  </div>
+
+  <div id="bContent"></div>
+</div>
+</div>
+
 </body>
 </html>
 
@@ -832,37 +858,44 @@ function parseOrder() {
 
   const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
 
-  // ชื่อ: บรรทัดแรกที่ไม่ใช่เบอร์และไม่ใช่ตัวเลขนำ
-  const nameLine = lines.find(l => !/^0[6-9]\d{8}/.test(l) && !/^\d+[\s\/]/.test(l) && l.length > 3 && !/รอบจัดส่ง|━|สรุป|ออเดอร์|Polaroid/.test(l));
+  // ── ชื่อ: บรรทัดแรกที่ไม่ใช่เบอร์ ไม่ใช่ตัวเลขนำ ไม่ใช่ emoji/ระบบ
+  const nameLine = lines.find(l =>
+    !/^0[6-9]\d{8}/.test(l) &&
+    !/^\d+[\s\/]/.test(l) &&
+    !/รอบจัดส่ง|━|สรุป|ออเดอร์|Polaroid|📦|🖨️|งานพิมพ์|สต๊ก|Photocard|จัดเซ็ต|Die-cut|STICKER/.test(l) &&
+    l.length > 1
+  );
   if (nameLine) document.getElementById('pName').value = nameLine;
 
-  // เบอร์โทร
-  const phoneMatch = raw.match(/0[6-9]\d{8}/);
-  if (phoneMatch) document.getElementById('pPhone').value = phoneMatch[0];
+  // ── เบอร์โทร: รองรับ 0930822524 / 093-082-2524 / 093 082 2524
+  const phoneMatch = raw.replace(/[-\s]/g, '').match(/(?<![\d])(0[6-9]\d{8})(?![\d])/);
+  if (phoneMatch) document.getElementById('pPhone').value = phoneMatch[1];
 
-  // รอบจัดส่ง
+  // ── รอบจัดส่ง
   const dateMatch = raw.match(/รอบจัดส่ง[^:]*:\s*(\d{1,2}\/\d{1,2}\/\d{4})/);
   if (dateMatch) document.getElementById('pShipDate').value = dateMatch[1];
 
-  // จังหวัด: รองรับ จ.xxx / จังหวัดxxx / กรุงเทพฯ / กรุงเทพมหานคร
-  const provMatch = raw.match(/จ\.\s*([^\s\d\n,]+(?:\s+[^\s\d\n,]+)?)|จังหวัด\s*([^\s\d\n,]+)|(กรุงเทพฯ|กรุงเทพมหานคร|กรุงเทพ)/);
+  // ── จังหวัด: จ.xxx / จังหวัดxxx / กรุงเทพฯ / กรุงเทพมหานคร
+  const provMatch = raw.match(/จ\.\s*([^\s\d\n,()]+)|จังหวัด\s*([^\s\d\n,()]+)|(กรุงเทพฯ|กรุงเทพมหานคร|กรุงเทพ)/);
   if (provMatch) document.getElementById('pProvince').value = (provMatch[1]||provMatch[2]||provMatch[3]).trim();
 
-  // ที่อยู่: บรรทัดที่มีเลขบ้านและรหัสไปรษณีย์
-  const addrLine = lines.find(l => /\d{5}/.test(l) && /^\d/.test(l));
+  // ── ที่อยู่: บรรทัดที่มีรหัสไปรษณีย์ 5 หลัก (รองรับขึ้นต้นด้วยตัวอักษรด้วย เช่น คอนโด/บ้าน)
+  const addrLine = lines.find(l => /\d{5}/.test(l) && l.length > 10);
   const name = document.getElementById('pName').value;
   const phone = document.getElementById('pPhone').value;
   if (addrLine) document.getElementById('pAddress').value = `${name}\n${addrLine}\nT.${phone}`.trim();
 
-  // รายการสินค้า
+  // ── รายการสินค้า
   const itemsMatch = raw.match(/(?:งานพิมพ์รูป|สต๊กเกอร์|Photocard|จัดเซ็ต|Die-cut|จัดเซต|STICKER)([\s\S]*?)(?=ค่าสินค้า|━|รวม|$)/i);
   if (itemsMatch) document.getElementById('pItems').value = itemsMatch[0].trim().replace(/\n+/g,'\n');
 }
 function clearParser() {
-  ['rawText','pOrderId','pName','pPhone','pProvince','pShipDate','pAddress','pItems'].forEach(id => {
+  ['rawText','pName','pPhone','pProvince','pShipDate','pAddress','pItems'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('pStatus').className = 't-st';
+  document.getElementById('msgOut').value = '';
+  loadNextPT(); // โหลดรหัส PT ถัดไปอัตโนมัติ
 }
 
 async function pushOrder() {
@@ -973,4 +1006,126 @@ switchTab = function(tab, el) {
   _origSwitchTab(tab, el);
   if (tab === 'parser') loadNextPT();
 };
+
+// ===== BOARD =====
+const B_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRTvOZSL9sX3ezpv8wGlhHB4o50K6dPYPs5L_64JjQSbVPGtutC-YYixoMe_z7yJ8MY2rdmN64MEZTE/pub?output=csv";
+const B_STEPS = [
+  { id:1, emoji:"💸", label:"โอนเงินแล้ว",  cls:"#E3F2FD", color:"#1565C0", dot:"#1565C0" },
+  { id:2, emoji:"📂", label:"โหลดไฟล์แล้ว", cls:"#FFF3E0", color:"#E65100", dot:"#E65100" },
+  { id:3, emoji:"⏳", label:"รอคิวผลิต",    cls:"#FFF8E1", color:"#F57F17", dot:"#F9A825" },
+  { id:4, emoji:"🖨️", label:"กำลังผลิต",    cls:"#F3E5F5", color:"#6A1B9A", dot:"#8E24AA" },
+  { id:5, emoji:"📦", label:"แพ็กของแล้ว",  cls:"#E8F5E9", color:"#2E7D32", dot:"#43A047" },
+  { id:6, emoji:"🚚", label:"จัดส่งแล้ว",   cls:"#E1F5EE", color:"#0F6E56", dot:"#1D9E75" },
+];
+let bDB = [], bFilter = 0, bLoaded = false;
+
+function bSplitCSV(line) {
+  const r = []; let c = "", q = false;
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '"') q = !q;
+    else if (line[i] === ',' && !q) { r.push(c); c = ""; }
+    else c += line[i];
+  } r.push(c); return r;
+}
+function bParseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const h = bSplitCSV(lines[0]).map(x => x.trim());
+  return lines.slice(1).map(l => {
+    const v = bSplitCSV(l), o = {};
+    h.forEach((k,i) => o[k] = (v[i]||"").trim());
+    return o;
+  }).filter(r => Object.values(r).some(v => v));
+}
+function bMapRow(r) {
+  const k = Object.keys(r);
+  const stepRaw = (r[k[7]]||"").trim();
+  let step = parseInt(stepRaw);
+  if (isNaN(step)) {
+    const s = stepRaw.toLowerCase();
+    if (s.includes("โอนเงิน")) step=1;
+    else if (s.includes("โหลดไฟล์")) step=2;
+    else if (s.includes("รอคิว")) step=3;
+    else if (s.includes("กำลังผลิต")) step=4;
+    else if (s.includes("แพ็ก")) step=5;
+    else if (s.includes("จัดส่ง")) step=6;
+    else step=1;
+  }
+  return { tracking:r[k[0]]||"", name:r[k[1]]||"", phone:r[k[2]]||"", province:r[k[3]]||"", date:r[k[4]]||"", orderCode:r[k[6]]||"", step:Math.min(Math.max(step,1),6) };
+}
+async function bLoad() {
+  try {
+    const res = await fetch(B_CSV);
+    if (!res.ok) throw new Error();
+    bDB = bParseCSV(await res.text()).map(bMapRow).filter(r => r.orderCode||r.name);
+    document.getElementById("bSyncDot").style.background = "#1D9E75";
+    document.getElementById("bSyncStatus").textContent = "โหลดสำเร็จ ("+bDB.length+" รายการ)";
+    bRenderAll();
+  } catch {
+    document.getElementById("bSyncDot").style.background = "#E24B4A";
+    document.getElementById("bSyncStatus").textContent = "โหลดไม่สำเร็จ";
+  }
+}
+function bReload() {
+  document.getElementById("bSyncStatus").textContent = "กำลังโหลดข้อมูล...";
+  document.getElementById("bSyncDot").style.background = "var(--text-muted)";
+  bLoad();
+}
+function bSetFilter(id) { bFilter = id; bRenderAll(); }
+function bRenderAll() {
+  const total = bDB.length;
+  const done = bDB.filter(r=>r.step===6).length;
+  document.getElementById("bTotal").textContent = total;
+  document.getElementById("bActive").textContent = total - done;
+  document.getElementById("bDone").textContent = done;
+
+  let btns = `<button onclick="bSetFilter(0)" style="padding:8px 14px;border-radius:20px;border:1.5px solid ${bFilter===0?'#1D9E75':'var(--border)'};background:${bFilter===0?'#1D9E75':'var(--surface)'};color:${bFilter===0?'#fff':'var(--text-muted)'};font-family:var(--sans);font-size:13px;font-weight:${bFilter===0?'600':'500'};cursor:pointer;white-space:nowrap;">ทั้งหมด <span style="background:${bFilter===0?'rgba(255,255,255,0.3)':'var(--bg)'};border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;">${total}</span></button>`;
+  B_STEPS.forEach(st => {
+    const cnt = bDB.filter(r=>r.step===st.id).length;
+    const act = bFilter===st.id;
+    btns += `<button onclick="bSetFilter(${st.id})" style="padding:8px 14px;border-radius:20px;border:1.5px solid ${act?'#1D9E75':'var(--border)'};background:${act?'#1D9E75':'var(--surface)'};color:${act?'#fff':'var(--text-muted)'};font-family:var(--sans);font-size:13px;font-weight:${act?'600':'500'};cursor:pointer;white-space:nowrap;">${st.emoji} ${st.label} <span style="background:${act?'rgba(255,255,255,0.3)':'var(--bg)'};border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;">${cnt}</span></button>`;
+  });
+  document.getElementById("bFilterRow").innerHTML = btns;
+
+  const filtered = bFilter===0 ? bDB : bDB.filter(r=>r.step===bFilter);
+  if (!filtered.length) {
+    document.getElementById("bContent").innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text-muted);font-size:14px;line-height:2;">✨<br>ไม่มีออเดอร์ในขั้นตอนนี้ค่ะ</div>';
+    return;
+  }
+  const groups = bFilter===0 ? B_STEPS.map(s=>s.id) : [bFilter];
+  let html = "";
+  groups.forEach(sid => {
+    const orders = filtered.filter(r=>r.step===sid);
+    if (!orders.length) return;
+    const st = B_STEPS[sid-1];
+    html += `<div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;display:flex;align-items:center;gap:8px;">${st.emoji} ${st.label} · ${orders.length} ออเดอร์ <span style="flex:1;height:1px;background:var(--border);display:block;"></span></div>`;
+    html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+    orders.forEach(o => {
+      html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${st.dot};"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;">${o.name}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;">
+            ${o.orderCode?`<span style="background:var(--bg);padding:2px 7px;border-radius:8px;font-size:11px;">${o.orderCode}</span>`:''}
+            ${o.phone?`<span style="background:var(--bg);padding:2px 7px;border-radius:8px;font-size:11px;">${o.phone}</span>`:''}
+            ${o.province?`<span style="background:var(--bg);padding:2px 7px;border-radius:8px;font-size:11px;">📍${o.province}</span>`:''}
+            ${o.date?`<span style="background:var(--bg);padding:2px 7px;border-radius:8px;font-size:11px;">รอบ ${o.date}</span>`:''}
+          </div>
+        </div>
+        <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0;background:${st.cls};color:${st.color};">${st.emoji} ${st.label}</span>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById("bContent").innerHTML = html;
+}
+
+// โหลดบอร์ดตอนกดแท็บ
+const _origSwitchTab2 = switchTab;
+switchTab = function(tab, el) {
+  _origSwitchTab2(tab, el);
+  if (tab === 'board' && !bLoaded) { bLoaded = true; bLoad(); }
+  else if (tab === 'board') { bRenderAll(); }
+};
+
 </script>
