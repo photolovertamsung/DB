@@ -868,9 +868,9 @@ function parseOrder() {
   );
   if (nameLine) document.getElementById('pName').value = nameLine;
 
-  // ── เบอร์โทร: รองรับ 0930822524 / 093-082-2524 / 093 082 2524
-  const phoneMatch = raw.replace(/[-\s]/g, '').match(/(?<![\d])(0[6-9]\d{8})(?![\d])/);
-  if (phoneMatch) document.getElementById('pPhone').value = phoneMatch[1];
+  // ── เบอร์โทร: รองรับ 0830115718 / 083-011-5718 / 083 011 5718
+  const phoneMatch = raw.replace(/[-\s]/g, '').match(/0[6-9]\d{8}/);
+  if (phoneMatch) document.getElementById('pPhone').value = phoneMatch[0];
 
   // ── รอบจัดส่ง
   const dateMatch = raw.match(/รอบจัดส่ง[^:]*:\s*(\d{1,2}\/\d{1,2}\/\d{4})/);
@@ -1039,8 +1039,8 @@ function bParseCSV(text) {
   }).filter(r => Object.values(r).some(v => v));
 }
 function bMapRow(r) {
-  const k = Object.keys(r);
-  const stepRaw = (r[k[7]]||"").trim();
+  // ดึงด้วยชื่อ header ตรงๆ แทน index เพื่อกัน column shift
+  const stepRaw = (r["ขั้นตอนการผลิต"]||"").trim();
   let step = parseInt(stepRaw);
   if (isNaN(step)) {
     const s = stepRaw.toLowerCase();
@@ -1052,9 +1052,16 @@ function bMapRow(r) {
     else if (s.includes("จัดส่ง")) step=6;
     else step=1;
   }
-  // ค่า 7, 8 = จัดส่งแล้ว (เลข step เกิน 6 ใน Sheet หมายถึงเสร็จแล้ว)
   if (step >= 7) step = 6;
-  return { tracking:r[k[0]]||"", name:r[k[1]]||"", phone:r[k[2]]||"", province:r[k[3]]||"", date:r[k[4]]||"", orderCode:r[k[6]]||"", step:Math.min(Math.max(step,1),6) };
+  return {
+    tracking:  r["หมายเลขติดตามพัสดุ"]||"",
+    name:      (r["ชื่อผู้รับ"]||"").trim(),
+    phone:     r["หมายเลขโทรศัพท์ผู้รับ"]||"",
+    province:  r["จังหวัดของผู้รับ"]||"",
+    date:      r["รอบจัดส่ง"]||"",
+    orderCode: r["รหัสออเดอร์"]||"",
+    step:      Math.min(Math.max(step,1),6)
+  };
 }
 async function bLoad() {
   try {
