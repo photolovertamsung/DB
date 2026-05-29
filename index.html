@@ -205,6 +205,7 @@
   .order-row {
     display: grid;
     grid-template-columns: 110px 1fr 80px 88px 40px;
+    grid-template-rows: auto;
     align-items: center;
     padding: 10px 16px;
     gap: 8px;
@@ -302,6 +303,35 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .spin { display: inline-block; animation: spin 1s linear infinite; }
 
+  /* Detail panel */
+  .detail-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--pink);
+    border-radius: 50%;
+    margin-left: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .detail-panel {
+    display: none;
+    grid-column: 1 / -1;
+    background: var(--pink-light);
+    border-top: 1px solid rgba(212,83,126,0.15);
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--pink-dark);
+    border-radius: 0 0 8px 8px;
+    animation: slideDown 0.15s ease;
+  }
+  .detail-panel.open { display: block; }
+  .detail-icon { font-size: 13px; margin-right: 4px; }
+  .has-detail:hover { background: #fdf5f8 !important; }
+  @keyframes slideDown {
+    from { opacity:0; transform:translateY(-4px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
   /* Responsive */
   @media (max-width: 600px) {
     header { padding: 0 14px; }
@@ -345,7 +375,7 @@ const API_KEY   = 'AIzaSyCLhgZL3uWKQsVXDNrzsE6EVuIp-dGDe3s';
 const TAB_NAME  = 'ชีต 1';   // ← เปลี่ยนถ้าชื่อ Tab ต่างกัน
 // ════════════════════════════════════
 
-const COL = { name:1, date:4, orderId:6, level:14 }; // 0-indexed จาก col A
+const COL = { name:1, date:4, orderId:6, level:14, detail:13 }; // 0-indexed จาก col A (N=index13)
 
 let allOrders = [];
 let currentFilter = 'all';
@@ -413,7 +443,8 @@ async function loadData(){
         id:    (r[COL.orderId]||'').trim(),
         name:  (r[COL.name]||'').trim(),
         date:  parseDate(r[COL.date]),
-        level: parseInt(r[COL.level])||0
+        level: parseInt(r[COL.level])||0,
+        detail:(r[COL.detail]||'').trim()
       }))
       .filter(o=> o.id && o.level>=1 && o.level<=3);
 
@@ -494,17 +525,29 @@ function zoneHTML(id, title, orders){
 
 function rowHTML(o){
   const dc = dateClass(o.date);
+  const detail = o.detail || '';
+  const hasDetail = detail.length > 0;
   return `
-  <div class="order-row" id="row-${o.id}">
+  <div class="order-row${hasDetail?' has-detail':''}" id="row-${o.id}" onclick="toggleDetail('${o.id}')" style="cursor:${hasDetail?'pointer':'default'}">
     <span class="cell-id">${o.id}</span>
-    <span class="cell-name" title="${o.name}">${o.name}</span>
+    <span class="cell-name" title="${o.name}">${o.name}${hasDetail?'<span class="detail-dot" title="มีรายละเอียดสินค้า">·</span>':''}</span>
     <span><span class="lvl ${levelClass(o.level)}">${levelLabel(o.level)}</span></span>
     <span class="cell-date ${dc}">${fmtDate(o.date)}</span>
     <span class="cell-check">
       <input type="checkbox" title="ทำเครื่องหมายเสร็จ"
+        onclick="event.stopPropagation()"
         onchange="markDone('${o.id}',this.checked)">
     </span>
+    ${hasDetail?`<div class="detail-panel" id="detail-${o.id}">
+      <span class="detail-icon">📦</span> ${detail}
+    </div>`:''}
   </div>`;
+}
+
+function toggleDetail(id){
+  const panel = document.getElementById('detail-'+id);
+  if(!panel) return;
+  panel.classList.toggle('open');
 }
 
 function markDone(id, checked){
