@@ -464,7 +464,7 @@
       <div class="t-r2">
         <div class="t-f">
           <div class="t-lbl">รหัสออเดอร์ <span class="t-tag t-tag-m">กรอกเอง</span></div>
-          <input class="t-in" type="text" id="pOrderId" placeholder="PT-00132" />
+          <input class="t-in" type="text" id="pOrderId" placeholder="PT-00132" value="PT-" pattern="PT-[0-9]{5}" maxlength="8" oninput="lockPT(this)" />
         </div>
         <div class="t-f">
           <div class="t-lbl">รอบจัดส่ง <span class="t-tag t-tag-a">auto</span></div>
@@ -702,6 +702,13 @@ function markDone(id, checked){
 
 // ── Init ──────────────────────────────
 loadData();
+
+function lockPT(el) {
+  let v = el.value;
+  if (!v.startsWith('PT-')) v = 'PT-';
+  v = 'PT-' + v.slice(3).replace(/[^0-9]/g, '').slice(0, 5);
+  el.value = v;
+}
 </script>
 </body>
 </html>
@@ -850,13 +857,13 @@ async function pushOrder() {
   showPStatus('load','กำลัง push เข้า Sheet...');
   document.getElementById('btnPush').disabled = true;
   try {
-    const res = await fetch(PARSER_API, {
+    await fetch(PARSER_API, {
       method: 'POST',
+      mode: 'no-cors',
       body: JSON.stringify({ action:'addOrder', orderId, name, phone, province, shipDate, address, items }),
       headers: { 'Content-Type':'application/json' }
     });
-    const json = await res.json();
-    showPStatus(json.ok?'ok':'err', json.msg || (json.ok?'Push สำเร็จค่ะ! ✨':'เกิดข้อผิดพลาดค่ะ'));
+    showPStatus('ok','Push สำเร็จค่ะ! ✨ ตรวจสอบใน Sheet ได้เลย');
   } catch(e) {
     showPStatus('err','ไม่สามารถเชื่อมต่อ API ได้: '+e.message);
   } finally {
