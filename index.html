@@ -377,16 +377,39 @@
 // ════════════════════════════════════
 const SHEET_ID  = '14oLUa0F6VlCxQ2LZGsJgV4oGXICylQPC6vO_aq6deiI';
 const API_KEY   = 'AIzaSyCLhgZL3uWKQsVXDNrzsE6EVuIp-dGDe3s';
-const TAB_NAME  = 'ชีต 1';   // ← เปลี่ยนถ้าชื่อ Tab ต่างกัน
+const TAB_NAME  = 'data';   // ← เปลี่ยนถ้าชื่อ Tab ต่างกัน
 // ════════════════════════════════════
 
 const COL = { name:1, date:4, orderId:6, level:14, detail:13 }; // 0-indexed จาก col A (N=index13)
 
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzE4QO-2UFb_hzs39_d1-AtpA0eMZ3bSPePA8yLaKrinGrliV1D1eLp4uvQ7Vplr4hg/exec';
+
 let allOrders = [];
 let currentFilter = 'all';
-let doneSet = new Set(JSON.parse(localStorage.getItem('pt_done')||'[]'));
 
-function saveDone(){ localStorage.setItem('pt_done', JSON.stringify([...doneSet])); }
+async function markDone(id, checked){
+  // ซ่อนแถวทันที ไม่รอ response
+  if(checked){
+    const row = document.getElementById('row-'+id);
+    if(row){ row.style.opacity='0'; setTimeout(renderAll,350); }
+  } else {
+    renderAll();
+  }
+
+  // ส่งข้อมูลไป Apps Script → Sheets
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: id, done: checked })
+    });
+    // รีเฟรชข้อมูลจาก Sheets หลังอัปเดต
+    setTimeout(loadData, 1500);
+  } catch(e) {
+    console.error('บันทึกไม่สำเร็จ:', e);
+  }
+}
 
 // Clock
 function updateClock(){
@@ -437,7 +460,7 @@ async function loadData(){
   document.getElementById('main').innerHTML = '<div class="status-box">⏳ กำลังดึงข้อมูล...</div>';
 
   try{
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!A2:O?key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!A2:P?key=${API_KEY}`;
     const res = await fetch(url);
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
@@ -449,9 +472,10 @@ async function loadData(){
         name:  (r[COL.name]||'').trim(),
         date:  parseDate(r[COL.date]),
         level: parseInt(r[COL.level])||0,
-        detail:(r[COL.detail]||'').trim()
+        detail:(r[COL.detail]||'').trim(),
+        done:  (r[15]||'').toString().toUpperCase() === 'TRUE'
       }))
-      .filter(o=> o.id && o.level>=1 && o.level<=3);
+      .filter(o=> o.id && o.level>=1 && o.level<=3 && !o.done);
 
     renderAll();
   } catch(e){
@@ -553,16 +577,6 @@ function toggleDetail(id){
   const panel = document.getElementById('detail-'+id);
   if(!panel) return;
   panel.classList.toggle('open');
-}
-
-function markDone(id, checked){
-  if(checked){
-    doneSet.add(id); saveDone();
-    const row = document.getElementById('row-'+id);
-    if(row){ row.style.opacity='0'; setTimeout(renderAll,350); }
-  } else {
-    doneSet.delete(id); saveDone(); renderAll();
-  }
 }
 
 // ── Init ──────────────────────────────
