@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polaroid Tamsung — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #d4537e;
+    --pink-light: #fbeaf0;
+    --pink-dark: #72243e;
+    --amber: #ba7517;
+    --amber-light: #faeeda;
+    --red: #a32d2d;
+    --red-light: #fcebeb;
+    --green: #0f6e56;
+    --green-light: #e1f5ee;
+    --blue: #185fa5;
+    --blue-light: #e6f1fb;
+    --gray: #5f5e5a;
+    --gray-light: #f1efe8;
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --text: #1a1a18;
+    --text-muted: #888780;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Sarabun', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo-pill {
+    background: var(--pink-light);
+    color: var(--pink-dark);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 99px;
+    letter-spacing: 0.05em;
+  }
+
+  header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  #clock {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .btn-refresh {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  .btn-refresh:hover { background: var(--gray-light); color: var(--text); }
+
+  /* ── Filter Bar ── */
+  .filter-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-label { font-size: 11px; color: var(--text-muted); margin-right: 4px; }
+
+  .filter-chip {
+    font-size: 11px;
+    font-family: var(--sans);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 3px 12px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .filter-chip:hover { background: var(--gray-light); }
+  .filter-chip.active {
+    background: var(--text);
+    color: #fff;
+    border-color: var(--text);
+  }
+
+  /* ── Main Layout ── */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── Zone Card ── */
+  .zone {
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .zone-header {
+    padding: 11px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .zone-stripe {
+    width: 3px;
+    height: 16px;
+    border-radius: 99px;
+    flex-shrink: 0;
+  }
+
+  .zone-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .zone-badge {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: var(--gray-light);
+    color: var(--gray);
+  }
+
+  /* ── Column Header ── */
+  .col-head {
+    display: grid;
+    grid-template-columns: 110px 1fr 80px 88px 40px;
+    padding: 5px 16px;
+    gap: 8px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .col-head span {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: var(--mono);
+  }
+  .col-head span:nth-child(4) { text-align: right; }
+  .col-head span:nth-child(5) { text-align: center; }
+
+  /* ── Order Row ── */
+  .order-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 80px 88px 40px;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s, opacity 0.3s;
+  }
+  .order-row:last-child { border-bottom: none; }
+  .order-row:hover { background: var(--bg); }
+
+  .cell-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .cell-name {
+    font-size: 13px;
+    font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Level badges */
+  .lvl {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 99px;
+    letter-spacing: 0.03em;
+  }
+  .lvl-1 { background: var(--amber-light); color: var(--amber); }
+  .lvl-2 { background: var(--green-light); color: var(--green); }
+  .lvl-3 { background: var(--red-light); color: var(--red); }
+  .lvl-4 { background: var(--gray-light); color: var(--gray); }
+
+  /* Date cell */
+  .cell-date {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-align: right;
+    font-weight: 500;
+  }
+  .date-ok { color: var(--text-muted); }
+  .date-soon { color: var(--amber); }
+  .date-late { color: var(--red); }
+
+  /* Checkbox */
+  .cell-check { display: flex; justify-content: center; }
+  input[type=checkbox] {
+    width: 15px; height: 15px;
+    accent-color: var(--pink);
+    cursor: pointer;
+  }
+
+  /* Empty state */
+  .empty {
+    padding: 24px 16px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* Loading / Error */
+  .status-box {
+    padding: 32px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .error-banner {
+    background: var(--red-light);
+    color: var(--red);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .error-banner strong { display: block; font-size: 13px; margin-bottom: 4px; }
+
+  /* ── Zone Colors ── */
+  .zone-z1 .zone-stripe { background: var(--red); }
+  .zone-z1 .zone-title  { color: var(--red); }
+  .zone-z2 .zone-stripe { background: var(--amber); }
+  .zone-z2 .zone-title  { color: var(--amber); }
+  .zone-z3 .zone-stripe { background: var(--green); }
+  .zone-z3 .zone-title  { color: var(--green); }
+  .zone-z4 .zone-stripe { background: var(--blue); }
+  .zone-z4 .zone-title  { color: var(--blue); }
+
+  /* Spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { display: inline-block; animation: spin 1s linear infinite; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    header { padding: 0 14px; }
+    main { padding: 12px 10px 32px; }
+    .col-head, .order-row {
+      grid-template-columns: 95px 1fr 68px 72px 32px;
+    }
+    .filter-bar { padding: 8px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo-pill">PT</span>
+  <h1>Polaroid Tamsung</h1>
+  <div class="header-right">
+    <span id="clock"></span>
+    <button class="btn-refresh" onclick="loadData()">
+      <span id="refresh-icon">↻</span> รีเฟรช
+    </button>
+  </div>
+</header>
+
+<div class="filter-bar">
+  <span class="filter-label">กรอง:</span>
+  <button class="filter-chip active" onclick="setFilter('all',this)">ทั้งหมด</button>
+  <button class="filter-chip" onclick="setFilter('1',this)">งานไว</button>
+  <button class="filter-chip" onclick="setFilter('2',this)">งานหลัก</button>
+  <button class="filter-chip" onclick="setFilter('3',this)">งานใหญ่</button>
+</div>
+
+<main id="main"></main>
+
+<script>
+// ════════════════════════════════════
+//  ⚙️  ตั้งค่าตรงนี้
+// ════════════════════════════════════
+const SHEET_ID  = '14oLUa0F6VlCxQ2LZGsJgV4oGXICylQPC6vO_aq6deiI';
+const API_KEY   = 'AIzaSyCLhgZL3uWKQsVXDNrzsE6EVuIp-dGDe3s';
+const TAB_NAME  = 'ชีต 1';   // ← เปลี่ยนถ้าชื่อ Tab ต่างกัน
+// ════════════════════════════════════
+
+const COL = { name:1, date:4, orderId:6, level:14 }; // 0-indexed จาก col A
+
+let allOrders = [];
+let currentFilter = 'all';
+let doneSet = new Set(JSON.parse(localStorage.getItem('pt_done')||'[]'));
+
+function saveDone(){ localStorage.setItem('pt_done', JSON.stringify([...doneSet])); }
+
+// Clock
+function updateClock(){
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+// Date parser — รองรับ dd/mm/yy (พ.ศ.) และ dd/mm/yyyy (ค.ศ. หรือ พ.ศ.)
+function parseDate(v){
+  if(!v) return null;
+  if(v instanceof Date && !isNaN(v)) return v;
+  const s = String(v).trim();
+  const p = s.split('/');
+  if(p.length===3){
+    let y=parseInt(p[2]), m=parseInt(p[1])-1, d=parseInt(p[0]);
+    if(y<100) y+=2500;          // 69 → 2569
+    if(y>2400) y-=543;          // พ.ศ. → ค.ศ.
+    const dt=new Date(y,m,d);
+    if(!isNaN(dt)) return dt;
+  }
+  const dt=new Date(v);
+  return isNaN(dt)?null:dt;
+}
+
+function fmtDate(dt){
+  if(!dt) return '—';
+  return dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+}
+
+function dateClass(dt){
+  if(!dt) return 'date-ok';
+  const t=new Date(); t.setHours(0,0,0,0);
+  const diff=Math.round((dt-t)/86400000);
+  if(diff<=0) return 'date-late';
+  if(diff===1) return 'date-soon';
+  return 'date-ok';
+}
+
+function levelLabel(n){ return {1:'งานไว',2:'งานหลัก',3:'งานใหญ่',4:'อื่นๆ'}[n]||'—'; }
+function levelClass(n){ return ['lvl-1','lvl-2','lvl-3','lvl-4'][n-1]||'lvl-4'; }
+
+// ── Load from Sheets ──────────────────
+async function loadData(){
+  const icon = document.getElementById('refresh-icon');
+  icon.classList.add('spin');
+  document.getElementById('main').innerHTML = '<div class="status-box">⏳ กำลังดึงข้อมูล...</div>';
+
+  try{
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!A2:O?key=${API_KEY}`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const rows = json.values || [];
+
+    allOrders = rows
+      .map(r=>({
+        id:    (r[COL.orderId]||'').trim(),
+        name:  (r[COL.name]||'').trim(),
+        date:  parseDate(r[COL.date]),
+        level: parseInt(r[COL.level])||0
+      }))
+      .filter(o=> o.id && o.level>=1 && o.level<=3);
+
+    renderAll();
+  } catch(e){
+    document.getElementById('main').innerHTML = `
+      <div class="error-banner">
+        <strong>ดึงข้อมูลไม่ได้ครับ</strong>
+        ${e.message}<br><br>
+        ตรวจสอบ: API Key ถูกต้อง / Sheet เปิด Public / ชื่อ Tab ตรง
+      </div>`;
+  } finally {
+    icon.classList.remove('spin');
+  }
+}
+
+// ── Filter ────────────────────────────
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+// ── Render ────────────────────────────
+function renderAll(){
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  let orders = allOrders.filter(o=>
+    !doneSet.has(o.id) &&
+    (currentFilter==='all' || String(o.level)===currentFilter)
+  );
+
+  // Zone 1 — งานใหญ่ (level 3), เรียงวันใกล้ขึ้นก่อน
+  const z1 = orders.filter(o=>o.level===3)
+    .sort((a,b)=>(a.date||new Date(9e9))-(b.date||new Date(9e9)));
+
+  // Zone 2 — ล่าช้า (วันผ่านไปแล้ว), เรียงนานสุดขึ้นก่อน
+  const z2 = orders.filter(o=>o.date && o.date<today)
+    .sort((a,b)=>a.date-b.date);
+
+  // Zone 3 — วันนี้, งานไว (1) ก่อน งานหลัก (2)
+  const z3 = orders.filter(o=>o.date && +o.date===+today)
+    .sort((a,b)=>a.level-b.level);
+
+  // Zone 4 — อนาคต, เรียงวัน แล้วงานไว (1) ก่อน
+  const z4 = orders.filter(o=>o.date && o.date>today)
+    .sort((a,b)=> a.date-b.date || a.level-b.level);
+
+  document.getElementById('main').innerHTML = [
+    zoneHTML('z1','🔴 งานใหญ่',z1),
+    zoneHTML('z2','⚠️ งานล่าช้า',z2),
+    zoneHTML('z3','📌 วันนี้',z3),
+    zoneHTML('z4','📅 อนาคต',z4),
+  ].join('');
+}
+
+function zoneHTML(id, title, orders){
+  const rows = orders.filter(o=>!doneSet.has(o.id));
+  return `
+  <div class="zone zone-${id}">
+    <div class="zone-header">
+      <div class="zone-stripe"></div>
+      <span class="zone-title">${title}</span>
+      <span class="zone-badge">${rows.length}</span>
+    </div>
+    ${rows.length===0
+      ? `<div class="empty">ไม่มีรายการ</div>`
+      : `<div class="col-head">
+          <span>รหัส</span><span>ชื่อลูกค้า</span>
+          <span>ระดับ</span><span style="text-align:right">วันนัดส่ง</span>
+          <span style="text-align:center">เสร็จ</span>
+        </div>
+        ${rows.map(rowHTML).join('')}`
+    }
+  </div>`;
+}
+
+function rowHTML(o){
+  const dc = dateClass(o.date);
+  return `
+  <div class="order-row" id="row-${o.id}">
+    <span class="cell-id">${o.id}</span>
+    <span class="cell-name" title="${o.name}">${o.name}</span>
+    <span><span class="lvl ${levelClass(o.level)}">${levelLabel(o.level)}</span></span>
+    <span class="cell-date ${dc}">${fmtDate(o.date)}</span>
+    <span class="cell-check">
+      <input type="checkbox" title="ทำเครื่องหมายเสร็จ"
+        onchange="markDone('${o.id}',this.checked)">
+    </span>
+  </div>`;
+}
+
+function markDone(id, checked){
+  if(checked){
+    doneSet.add(id); saveDone();
+    const row = document.getElementById('row-'+id);
+    if(row){ row.style.opacity='0'; setTimeout(renderAll,350); }
+  } else {
+    doneSet.delete(id); saveDone(); renderAll();
+  }
+}
+
+// ── Init ──────────────────────────────
+loadData();
+</script>
+</body>
+</html>
