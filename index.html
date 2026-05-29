@@ -318,14 +318,19 @@
     grid-column: 1 / -1;
     background: var(--pink-light);
     border-top: 1px solid rgba(212,83,126,0.15);
-    padding: 8px 16px;
-    font-size: 12px;
+    padding: 10px 16px 12px;
+    font-size: 14px;
+    line-height: 1.8;
     color: var(--pink-dark);
     border-radius: 0 0 8px 8px;
     animation: slideDown 0.15s ease;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
   .detail-panel.open { display: block; }
-  .detail-icon { font-size: 13px; margin-right: 4px; }
+  .detail-panel span { display: block; padding-left: 22px; }
+  .detail-panel span:first-child { padding-left: 0; }
+  .detail-icon { font-size: 14px; margin-right: 5px; }
   .has-detail:hover { background: #fdf5f8 !important; }
   @keyframes slideDown {
     from { opacity:0; transform:translateY(-4px); }
@@ -525,12 +530,14 @@ function zoneHTML(id, title, orders){
 
 function rowHTML(o){
   const dc = dateClass(o.date);
-  const detail = o.detail || '';
-  const hasDetail = detail.length > 0;
+  const detail = (o.detail || '').replace(/\\n/g, '\n');
+  const hasDetail = detail.trim().length > 0;
+  // แปลงบรรทัดใหม่เป็น HTML เพื่อแสดงผลถูกต้อง
+  const detailLines = detail.trim().split('\n').map(l=>`<span>${l}</span>`).join('\n');
   return `
   <div class="order-row${hasDetail?' has-detail':''}" id="row-${o.id}" onclick="toggleDetail('${o.id}')" style="cursor:${hasDetail?'pointer':'default'}">
     <span class="cell-id">${o.id}</span>
-    <span class="cell-name" title="${o.name}">${o.name}${hasDetail?'<span class="detail-dot" title="มีรายละเอียดสินค้า">·</span>':''}</span>
+    <span class="cell-name" title="${o.name}">${o.name}${hasDetail?'<span class="detail-dot" title="มีรายละเอียดสินค้า"> •</span>':''}</span>
     <span><span class="lvl ${levelClass(o.level)}">${levelLabel(o.level)}</span></span>
     <span class="cell-date ${dc}">${fmtDate(o.date)}</span>
     <span class="cell-check">
@@ -538,9 +545,7 @@ function rowHTML(o){
         onclick="event.stopPropagation()"
         onchange="markDone('${o.id}',this.checked)">
     </span>
-    ${hasDetail?`<div class="detail-panel" id="detail-${o.id}">
-      <span class="detail-icon">📦</span> ${detail}
-    </div>`:''}
+    ${hasDetail?`<div class="detail-panel" id="detail-${o.id}">📦 ${detailLines}</div>`:''}
   </div>`;
 }
 
