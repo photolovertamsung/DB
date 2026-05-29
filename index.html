@@ -464,7 +464,7 @@
       <div class="t-r2">
         <div class="t-f">
           <div class="t-lbl">รหัสออเดอร์ <span class="t-tag t-tag-m">กรอกเอง</span></div>
-          <input class="t-in" type="text" id="pOrderId" placeholder="PT-00132" value="PT-" pattern="PT-[0-9]{5}" maxlength="8" oninput="lockPT(this)" />
+          <input class="t-in" type="text" id="pOrderId" placeholder="กำลังโหลด..." pattern="PT-[0-9]{5}" maxlength="8" oninput="lockPT(this)" />
         </div>
         <div class="t-f">
           <div class="t-lbl">รอบจัดส่ง <span class="t-tag t-tag-a">auto</span></div>
@@ -821,22 +821,35 @@ const PARSER_API = 'https://script.google.com/macros/s/AKfycbz_YIdJiP83U2N-OUPl2
 function parseOrder() {
   const raw = document.getElementById('rawText').value.trim();
   if (!raw) return;
-  const nameMatch = raw.match(/^([^\n]+)\n.*(?:ม\.|ต\.|อ\.|จ\.|ถ\.|ซ\.|หมู่|เลขที่)/m);
-  if (nameMatch) document.getElementById('pName').value = nameMatch[1].trim();
-  const phoneMatch = raw.match(/(?:T\.|Tel\.?|โทร\.?|เบอร์[^\d]*)?[:\s]*(0[6-9]\d{8})/i);
-  if (phoneMatch) document.getElementById('pPhone').value = phoneMatch[1];
-  const provMatch = raw.match(/จ\.\s*([^\s\d\n,]+(?:\s+[^\s\d\n,]+)?)|จังหวัด\s*([^\s\d\n,]+)/);
-  if (provMatch) document.getElementById('pProvince').value = (provMatch[1]||provMatch[2]).trim();
+
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // ชื่อ: บรรทัดแรกที่ไม่ใช่เบอร์และไม่ใช่ตัวเลขนำ
+  const nameLine = lines.find(l => !/^0[6-9]\d{8}/.test(l) && !/^\d+[\s\/]/.test(l) && l.length > 3 && !/รอบจัดส่ง|━|สรุป|ออเดอร์|Polaroid/.test(l));
+  if (nameLine) document.getElementById('pName').value = nameLine;
+
+  // เบอร์โทร
+  const phoneMatch = raw.match(/0[6-9]\d{8}/);
+  if (phoneMatch) document.getElementById('pPhone').value = phoneMatch[0];
+
+  // รอบจัดส่ง
   const dateMatch = raw.match(/รอบจัดส่ง[^:]*:\s*(\d{1,2}\/\d{1,2}\/\d{4})/);
   if (dateMatch) document.getElementById('pShipDate').value = dateMatch[1];
-  const itemsMatch = raw.match(/(?:งานพิมพ์รูป|สต๊กเกอร์|Photocard|จัดเซ็ต|Die-cut)([\s\S]*?)(?=ค่าสินค้า|━|$)/i);
-  if (itemsMatch) document.getElementById('pItems').value = itemsMatch[0].trim().replace(/\n+/g,'\n');
+
+  // จังหวัด: รองรับ จ.xxx / จังหวัดxxx / กรุงเทพฯ / กรุงเทพมหานคร
+  const provMatch = raw.match(/จ\.\s*([^\s\d\n,]+(?:\s+[^\s\d\n,]+)?)|จังหวัด\s*([^\s\d\n,]+)|(กรุงเทพฯ|กรุงเทพมหานคร|กรุงเทพ)/);
+  if (provMatch) document.getElementById('pProvince').value = (provMatch[1]||provMatch[2]||provMatch[3]).trim();
+
+  // ที่อยู่: บรรทัดที่มีเลขบ้านและรหัสไปรษณีย์
+  const addrLine = lines.find(l => /\d{5}/.test(l) && /^\d/.test(l));
   const name = document.getElementById('pName').value;
   const phone = document.getElementById('pPhone').value;
-  const addrBlock = raw.match(/(?:\d+\/\d+|\d+\s*ม\.)([\s\S]*?)(?:\d{5})/);
-  if (addrBlock) document.getElementById('pAddress').value = `${name}\n${addrBlock[0].trim()}\nT.${phone}`.trim();
-}
+  if (addrLine) document.getElementById('pAddress').value = `${name}\n${addrLine}\nT.${phone}`.trim();
 
+  // รายการสินค้า
+  const itemsMatch = raw.match(/(?:งานพิมพ์รูป|สต๊กเกอร์|Photocard|จัดเซ็ต|Die-cut|จัดเซต|STICKER)([\s\S]*?)(?=ค่าสินค้า|━|รวม|$)/i);
+  if (itemsMatch) document.getElementById('pItems').value = itemsMatch[0].trim().replace(/\n+/g,'\n');
+}
 function clearParser() {
   ['rawText','pOrderId','pName','pPhone','pProvince','pShipDate','pAddress','pItems'].forEach(id => {
     document.getElementById(id).value = '';
@@ -885,4 +898,31 @@ function showPStatus(type, msg) {
 
 // load search data ตอนเปิดหน้า
 loadSearchData();
+
+// ===== AUTO PT NUMBER =====
+async function loadNextPT() {
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!G2:G?key=${API_KEY}`;
+    const res = await fetch(url);
+    const json = await res.json();
+    const rows = json.values || [];
+    let max = 0;
+    for (const row of rows) {
+      const val = (row[0] || '').trim();
+      const m = val.match(/^PT-(\d+)$/);
+      if (m) max = Math.max(max, parseInt(m[1]));
+    }
+    const next = 'PT-' + String(max + 1).padStart(5, '0');
+    document.getElementById('pOrderId').value = next;
+  } catch(e) {
+    document.getElementById('pOrderId').value = 'PT-';
+  }
+}
+
+// โหลด PT อัตโนมัติตอนกดแท็บเพิ่มออเดอร์
+const _origSwitchTab = switchTab;
+switchTab = function(tab, el) {
+  _origSwitchTab(tab, el);
+  if (tab === 'parser') loadNextPT();
+};
 </script>
