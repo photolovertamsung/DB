@@ -503,6 +503,14 @@
         <span id="pMsg"></span>
       </div>
     </div>
+    <div class="t-card">
+      <div class="t-title"><span>④</span> ข้อความแจ้งลูกค้า</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="tb tb-parse" onclick="genMsg()">✉️ สร้างข้อความ</button>
+        <button class="tb tb-clear" onclick="copyMsg()" id="btnCopyMsg">📋 คัดลอก</button>
+      </div>
+      <textarea class="t-ta" id="msgOut" style="min-height:220px;font-size:13px;" readonly placeholder="กดปุ่ม 'สร้างข้อความ' เพื่อสร้างข้อความแจ้งลูกค้าค่ะ..."></textarea>
+    </div>
   </div>
 </div>
 
@@ -894,6 +902,46 @@ function showPStatus(type, msg) {
   bar.className = 't-st show t-st-' + (type==='ok'?'ok':type==='err'?'err':'load');
   dot.className = 't-dot t-dot-' + (type==='ok'?'ok':type==='err'?'err':'load');
   document.getElementById('pMsg').textContent = msg;
+}
+
+// ===== MESSAGE GENERATOR =====
+function genMsg() {
+  const orderId = document.getElementById('pOrderId').value.trim() || 'PT-XXXXX';
+  const shipDate = document.getElementById('pShipDate').value.trim() || '—';
+  const msg = `ขอบคุณมากๆเลยน้าค้าที่อุดหนุน 🥰
+
+✅ รับออเดอร์เรียบร้อยแล้วค่ะ
+ตรวจสอบไฟล์และยอดชำระครบแล้วน้า ตอนนี้งานเข้าสู่คิวผลิตเรียบร้อยค่ะ 🎉
+
+🔖 รหัสออเดอร์ : ${orderId}
+📦 รอบจัดส่ง : ${shipDate}
+🔔 แจ้งเลขพัสดุช่วง 22:00 น. เป็นต้นไป
+
+📲 สามารถติดตามสถานะงาน / ดูรูปงาน / ตรวจสอบเลขพัสดุ ได้ผ่านลิงก์นี้เลยค่ะ
+https://photolovertamsung.github.io/polaroid-tracking/index.html
+
+เมื่อลูกค้ากดเข้าไปแล้ว
+✨ ดูสถานะการผลิตสินค้า
+🖼️ ตรวจสอบรูปงาน
+🚚 ติดตามเลขพัสดุได้ในหน้าเดียวเลยค่ะ
+
+⏳ ข้อมูลออเดอร์จะอัปเดตหลังโอนประมาณ 24 ชั่วโมงน้า
+หากมีคำถามเพิ่มเติม ทักหาบลูได้ตลอดเลยน้า 💙`;
+  document.getElementById('msgOut').value = msg;
+}
+
+function copyMsg() {
+  const ta = document.getElementById('msgOut');
+  if (!ta.value) { genMsg(); }
+  const btn = document.getElementById('btnCopyMsg');
+  navigator.clipboard?.writeText(ta.value).then(() => {
+    btn.textContent = '✅ คัดลอกแล้ว';
+    setTimeout(() => { btn.textContent = '📋 คัดลอก'; }, 2000);
+  }).catch(() => {
+    ta.select(); document.execCommand('copy');
+    btn.textContent = '✅ คัดลอกแล้ว';
+    setTimeout(() => { btn.textContent = '📋 คัดลอก'; }, 2000);
+  });
 }
 
 // load search data ตอนเปิดหน้า
