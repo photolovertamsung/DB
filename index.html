@@ -496,7 +496,7 @@
     </div>
     <div class="t-card">
       <div class="t-title"><span>③</span> Push เข้า Google Sheet</div>
-      <div class="t-api">https://script.google.com/macros/s/AKfycbyYgGTwLc7nH8hfvskGcmUCfBYkq7WwDXaRu56KfjWbFopETMsAHE1yQ6XJUPzbK78D/exec</div>
+      <div class="t-api">https://script.google.com/macros/s/AKfycbzCuF2VbR9ejryyj59126uglXa0TIiXqyUo7ufSQNOqUwGn4A_QGmaOKPHmhwKjNYys/exec</div>
       <button class="tb tb-push" onclick="pushOrder()" id="btnPush">🚀 Push เข้า Sheet</button>
       <div class="t-st" id="pStatus">
         <div class="t-dot" id="pDot"></div>
@@ -816,7 +816,7 @@ function sCopy(text, i) {
 }
 
 // ===== PARSER =====
-const PARSER_API = 'https://script.google.com/macros/s/AKfycbyYgGTwLc7nH8hfvskGcmUCfBYkq7WwDXaRu56KfjWbFopETMsAHE1yQ6XJUPzbK78D/exec';
+const PARSER_API = 'https://script.google.com/macros/s/AKfycbzCuF2VbR9ejryyj59126uglXa0TIiXqyUo7ufSQNOqUwGn4A_QGmaOKPHmhwKjNYys/exec';
 
 function parseOrder() {
   const raw = document.getElementById('rawText').value.trim();
@@ -857,11 +857,10 @@ async function pushOrder() {
   showPStatus('load','กำลัง push เข้า Sheet...');
   document.getElementById('btnPush').disabled = true;
   try {
-    await fetch(PARSER_API, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify({ action:'addOrder', orderId, name, phone, province, shipDate, address, items }),
-      headers: { 'Content-Type':'application/json' }
+    const params = new URLSearchParams({ action:'addOrder', orderId, name, phone, province, shipDate, address, items });
+    await fetch(PARSER_API + '?' + params.toString(), {
+      method: 'GET',
+      mode: 'no-cors'
     });
     showPStatus('ok','Push สำเร็จค่ะ! ✨ ตรวจสอบใน Sheet ได้เลย');
   } catch(e) {
