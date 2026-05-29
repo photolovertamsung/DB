@@ -524,7 +524,7 @@ const API_KEY   = 'AIzaSyCLhgZL3uWKQsVXDNrzsE6EVuIp-dGDe3s';
 const TAB_NAME  = 'data';   // ← เปลี่ยนถ้าชื่อ Tab ต่างกัน
 // ════════════════════════════════════
 
-const COL = { name:1, date:4, orderId:6, level:14, detail:13 }; // 0-indexed จาก col A (N=index13)
+const COL = { name:1, date:4, orderId:6, level:14, detail:13, done:15 }; // 0-indexed จาก col A (P=index15)
 
 let allOrders = [];
 let currentFilter = 'all';
@@ -581,7 +581,7 @@ async function loadData(){
   document.getElementById('main').innerHTML = '<div class="status-box">⏳ กำลังดึงข้อมูล...</div>';
 
   try{
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!A2:O?key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!A2:P?key=${API_KEY}`;
     const res = await fetch(url);
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
@@ -593,9 +593,10 @@ async function loadData(){
         name:  (r[COL.name]||'').trim(),
         date:  parseDate(r[COL.date]),
         level: parseInt(r[COL.level])||0,
-        detail:(r[COL.detail]||'').trim()
+        detail:(r[COL.detail]||'').trim(),
+        done:  (r[COL.done]||'').toString().toUpperCase().trim()
       }))
-      .filter(o=> o.id && o.level>=1 && o.level<=3);
+      .filter(o=> o.id && o.level>=1 && o.level<=3 && o.done !== 'TRUE');
 
     renderAll();
   } catch(e){
@@ -1051,6 +1052,8 @@ function bMapRow(r) {
     else if (s.includes("จัดส่ง")) step=6;
     else step=1;
   }
+  // ค่า 7, 8 = จัดส่งแล้ว (เลข step เกิน 6 ใน Sheet หมายถึงเสร็จแล้ว)
+  if (step >= 7) step = 6;
   return { tracking:r[k[0]]||"", name:r[k[1]]||"", phone:r[k[2]]||"", province:r[k[3]]||"", date:r[k[4]]||"", orderCode:r[k[6]]||"", step:Math.min(Math.max(step,1),6) };
 }
 async function bLoad() {
