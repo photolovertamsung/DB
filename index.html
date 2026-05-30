@@ -528,9 +528,6 @@ const COL = { name:1, date:4, orderId:6, level:14, detail:13, done:15 }; // 0-in
 
 let allOrders = [];
 let currentFilter = 'all';
-let doneSet = new Set(JSON.parse(localStorage.getItem('pt_done')||'[]'));
-
-function saveDone(){ localStorage.setItem('pt_done', JSON.stringify([...doneSet])); }
 
 // Clock
 function updateClock(){
@@ -624,8 +621,7 @@ function renderAll(){
   const today = new Date(); today.setHours(0,0,0,0);
 
   let orders = allOrders.filter(o=>
-    !doneSet.has(o.id) &&
-    (currentFilter==='all' || String(o.level)===currentFilter)
+    currentFilter==='all' || String(o.level)===currentFilter
   );
 
   // Zone 1 — งานใหญ่ (level 3), เรียงวันใกล้ขึ้นก่อน
@@ -653,7 +649,7 @@ function renderAll(){
 }
 
 function zoneHTML(id, title, orders){
-  const rows = orders.filter(o=>!doneSet.has(o.id));
+  const rows = orders;
   return `
   <div class="zone zone-${id}">
     <div class="zone-header">
@@ -700,14 +696,23 @@ function toggleDetail(id){
   panel.classList.toggle('open');
 }
 
-function markDone(id, checked){
-  if(checked){
-    doneSet.add(id); saveDone();
-    const row = document.getElementById('row-'+id);
-    if(row){ row.style.opacity='0'; setTimeout(renderAll,350); }
-  } else {
-    doneSet.delete(id); saveDone(); renderAll();
-  }
+async function markDone(id, checked){
+  // fade row ทันที
+  const row = document.getElementById('row-'+id);
+  if(row){ row.style.opacity='0.4'; row.style.pointerEvents='none'; }
+
+  try {
+    const params = new URLSearchParams({ action:'markDone', orderId: id, done: checked ? 'true' : 'false' });
+    await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = img.onerror = () => resolve();
+      img.src = PARSER_API + '?' + params.toString();
+      setTimeout(resolve, 2500);
+    });
+  } catch(e) { console.error('markDone failed', e); }
+
+  // reload จาก Sheet → sync ทุก device
+  await loadData();
 }
 
 // ── Init ──────────────────────────────
@@ -851,7 +856,7 @@ function sCopy(text, i) {
 }
 
 // ===== PARSER =====
-const PARSER_API = 'https://script.google.com/macros/s/AKfycbz_YIdJiP83U2N-OUPl2Da_R7rQDR5I0PDp4rvizssxOVBI5LpnVACA-iYVF2ulwAGt/exec';
+const PARSER_API = 'https://script.google.com/macros/s/AKfycbzD6hRXGNHgTCUJabi2VJtRbiqsKWia_TK3axhRIZEjFOX84JF69WdhtrDkwKyKebbs/exec';
 
 function parseOrder() {
   const raw = document.getElementById('rawText').value.trim();
