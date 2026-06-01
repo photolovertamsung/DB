@@ -761,7 +761,17 @@ function rowHTML(o){
   const detail = (o.detail || '').replace(/\\n/g, '\n');
   const hasDetail = detail.trim().length > 0;
   // แปลงบรรทัดใหม่เป็น HTML เพื่อแสดงผลถูกต้อง
-  const detailLines = detail.trim().split('\n').map(l=>`<span>${l}</span>`).join('\n');
+  const detailLines = detail.trim().split('\n').map((l,li)=>{
+    const clean = l.replace(/^[•\-\*]\s*/,'').trim();
+    const escaped = clean.replace(/'/g,"\\'");
+    return `<span style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span>• ${clean}</span>
+      <button onclick="event.stopPropagation();copyLine('${escaped}')" 
+        style="flex-shrink:0;background:#4a5568;color:white;border:none;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;font-family:inherit;">
+        📋
+      </button>
+    </span>`;
+  }).join('\n');
   return `
   <div class="order-row${hasDetail?' has-detail':''}" id="row-${o.id}" onclick="toggleDetail('${o.id}')" style="cursor:${hasDetail?'pointer':'default'}">
     <span class="cell-id">${o.id}</span>
@@ -776,8 +786,56 @@ function rowHTML(o){
         onclick="event.stopPropagation()"
         onchange="markDone('${o.id}',this.checked)">
     </span>
-    ${hasDetail?`<div class="detail-panel" id="detail-${o.id}">📦 ${detailLines}</div>`:''}
+    ${hasDetail?`<div class="detail-panel" id="detail-${o.id}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div>📦 ${detailLines}</div>
+        <button onclick="event.stopPropagation();copyDetail('${o.id}')" 
+          style="flex-shrink:0;background:#4a5568;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;">
+          📋 ก๊อปปี้
+        </button>
+      </div>
+    </div>
+    <textarea id="raw-${o.id}" style="display:none">${(o.detail||'').replace(/\`/g,"'")}</textarea>`:''}
   </div>`;
+}
+
+function copyLine(text) {
+  navigator.clipboard?.writeText(text).then(() => showToast(text)).catch(() => {
+    const el = document.createElement('textarea');
+    el.value = text; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    showToast(text);
+  });
+}
+
+function copyDetail(id) {
+  const ta = document.getElementById('raw-' + id);
+  if (!ta) return;
+  const text = ta.value;
+  navigator.clipboard?.writeText(text).then(() => showToast(text)).catch(() => {
+    const el = document.createElement('textarea');
+    el.value = text; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    showToast(text);
+  });
+}
+
+function showToast(text) {
+  let toast = document.getElementById('copy-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'copy-toast';
+    toast.style.cssText = `position:fixed;top:16px;left:50%;transform:translateX(-50%);
+      background:#2d3748;color:white;padding:10px 18px;border-radius:10px;
+      font-size:12px;z-index:9999;max-width:90vw;word-break:break-all;
+      box-shadow:0 4px 20px rgba(0,0,0,0.4);border-left:3px solid #48bb78;
+      transition:opacity 0.3s;line-height:1.6;`;
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = '<span style="color:#68d391;font-weight:600;">✅ ก๊อปปี้แล้ว!</span><br>' + text.replace(/\n/g,'<br>');
+  toast.style.opacity = '1';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
 }
 
 function toggleDetail(id){
