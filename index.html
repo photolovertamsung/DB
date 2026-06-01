@@ -246,7 +246,7 @@
   /* ── Column Header ── */
   .col-head {
     display: grid;
-    grid-template-columns: 145px 1fr 110px 140px 50px;
+    grid-template-columns: 145px 1fr 110px 140px 44px 50px;
     padding: 6px 16px;
     gap: 12px;
     background: var(--bg);
@@ -265,7 +265,7 @@
   /* ── Order Row ── */
   .order-row {
     display: grid;
-    grid-template-columns: 145px 1fr 110px 140px 50px;
+    grid-template-columns: 145px 1fr 110px 140px 44px 50px;
     grid-template-rows: auto;
     align-items: center;
     padding: 12px 16px;
@@ -318,6 +318,9 @@
 
   /* Checkbox */
   .cell-check { display: flex; justify-content: center; }
+  .cell-folder { display: flex; justify-content: center; }
+  .btn-folder { background: none; border: none; font-size: 16px; cursor: pointer; padding: 2px 6px; border-radius: 6px; transition: background 0.15s; }
+  .btn-folder:hover { background: var(--border); }
   input[type=checkbox] {
     width: 15px; height: 15px;
     accent-color: var(--pink);
@@ -403,7 +406,7 @@
     header { padding: 0 14px; }
     main { padding: 12px 10px 32px; }
     .col-head, .order-row {
-      grid-template-columns: 120px 1fr 90px 120px 40px;
+      grid-template-columns: 120px 1fr 90px 120px 44px 40px;
     }
     .filter-bar { padding: 8px 14px; }
   }
@@ -478,7 +481,22 @@
   <button class="filter-chip" onclick="setFilter('3',this)">งานใหญ่</button>
 </div></div>
 
-<div class="page active" id="page-dashboard"><main id="main"></main></div>
+<div class="page active" id="page-dashboard">
+  <main id="main"></main>
+  <!-- กล่องงานเสร็จวันนี้ -->
+  <div id="done-box" style="display:none;position:fixed;bottom:70px;left:0;right:0;z-index:200;padding:0 12px;">
+    <div style="max-width:640px;margin:0 auto;background:#1a4731;border:1px solid #2f855a;border-radius:14px;padding:14px 16px;box-shadow:0 4px 24px rgba(0,0,0,0.4);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span style="font-weight:600;color:#68d391;font-size:14px;">✅ งานเสร็จวันนี้ (<span id="done-count">0</span> รายการ)</span>
+        <button onclick="clearDoneBox()" style="background:none;border:none;color:#68d391;font-size:18px;cursor:pointer;padding:0 4px;">✕</button>
+      </div>
+      <div id="done-list" style="font-size:12px;color:#9ae6b4;margin-bottom:12px;max-height:80px;overflow-y:auto;line-height:1.8;"></div>
+      <button onclick="moveAllDone()" style="width:100%;background:#2f855a;color:white;border:none;border-radius:10px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">
+        📦 ย้ายทั้งหมดไป Completed
+      </button>
+    </div>
+  </div>
+</div>
 
 
 <!-- PAGE: ค้นหา -->
@@ -629,6 +647,13 @@ function dateClass(dt){
   return 'date-ok';
 }
 
+function fmtDateFolder(dt){
+  if(!dt) return '';
+  const dd = String(dt.getDate()).padStart(2,'0');
+  const mm = String(dt.getMonth()+1).padStart(2,'0');
+  const yy = String(dt.getFullYear()+543).slice(-2);
+  return dd+'-'+mm+'-'+yy;
+}
 function levelLabel(n){ return {1:'งานไว',2:'งานหลัก',3:'งานใหญ่',4:'อื่นๆ'}[n]||'—'; }
 function levelClass(n){ return ['lvl-1','lvl-2','lvl-3','lvl-4'][n-1]||'lvl-4'; }
 
@@ -723,6 +748,7 @@ function zoneHTML(id, title, orders){
       : `<div class="col-head">
           <span>รหัส</span><span>ชื่อลูกค้า</span>
           <span>ระดับ</span><span style="text-align:right">วันนัดส่ง</span>
+          <span style="text-align:center">โฟลเดอร์</span>
           <span style="text-align:center">เสร็จ</span>
         </div>
         ${rows.map(rowHTML).join('')}`
@@ -742,6 +768,9 @@ function rowHTML(o){
     <span class="cell-name" title="${o.name}">${o.name}${hasDetail?'<span class="detail-dot" title="มีรายละเอียดสินค้า"> •</span>':''}</span>
     <span><span class="lvl ${levelClass(o.level)}">${levelLabel(o.level)}</span></span>
     <span class="cell-date ${dc}">${fmtDate(o.date)}</span>
+    <span class="cell-folder">
+      <button class="btn-folder" onclick="event.stopPropagation();sOpenFolder('${o.id}','${o.id} ${o.name} ${fmtDateFolder(o.date)} ${levelLabel(o.level)}')" title="เปิด/สร้างโฟลเดอร์">📂</button>
+    </span>
     <span class="cell-check">
       <input type="checkbox" title="ทำเครื่องหมายเสร็จ"
         onclick="event.stopPropagation()"
@@ -757,10 +786,26 @@ function toggleDetail(id){
   panel.classList.toggle('open');
 }
 
+// เก็บรายการงานเสร็จ
+const doneQueue = {}; // { id: { id, name, folderName } }
+
 async function markDone(id, checked){
-  // fade row ทันที
   const row = document.getElementById('row-'+id);
-  if(row){ row.style.opacity='0.4'; row.style.pointerEvents='none'; }
+
+  if (checked) {
+    // หาชื่อและวันที่จาก allOrders
+    const o = allOrders.find(x => x.id === id);
+    if (o) {
+      const folderName = id + ' ' + o.name + (o.date ? ' ' + fmtDateFolder(o.date) : '') + ' ' + levelLabel(o.level);
+      doneQueue[id] = { id, name: o.name, folderName };
+    }
+    if(row){ row.style.opacity='0.4'; row.style.pointerEvents='none'; }
+    updateDoneBox();
+  } else {
+    delete doneQueue[id];
+    if(row){ row.style.opacity='1'; row.style.pointerEvents=''; }
+    updateDoneBox();
+  }
 
   try {
     const params = new URLSearchParams({ action:'markDone', orderId: id, done: checked ? 'true' : 'false' });
@@ -771,9 +816,47 @@ async function markDone(id, checked){
       setTimeout(resolve, 2500);
     });
   } catch(e) { console.error('markDone failed', e); }
+}
 
-  // reload จาก Sheet → sync ทุก device
-  await loadData();
+function updateDoneBox() {
+  const box = document.getElementById('done-box');
+  const list = document.getElementById('done-list');
+  const count = document.getElementById('done-count');
+  const keys = Object.keys(doneQueue);
+  if (keys.length === 0) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  count.textContent = keys.length;
+  list.innerHTML = keys.map(k => '📁 ' + doneQueue[k].folderName).join('<br>');
+}
+
+function clearDoneBox() {
+  Object.keys(doneQueue).forEach(k => delete doneQueue[k]);
+  updateDoneBox();
+  loadData();
+}
+
+async function moveAllDone() {
+  const keys = Object.keys(doneQueue);
+  if (!keys.length) return;
+  const folders = keys.map(k => doneQueue[k].folderName);
+  try {
+    const res = await fetch('http://localhost:9876/move-done', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folders })
+    });
+    const msg = await res.text();
+    if (msg.startsWith('MOVED:')) {
+      alert('✅ ย้ายเสร็จแล้วค่ะ! ' + keys.length + ' รายการ');
+      Object.keys(doneQueue).forEach(k => delete doneQueue[k]);
+      updateDoneBox();
+      await loadData();
+    } else {
+      alert('❌ ' + msg);
+    }
+  } catch(e) {
+    alert('❌ กรุณาเปิดโปรแกรม Folder Server ก่อนนะคะ');
+  }
 }
 
 // ── Init ──────────────────────────────
