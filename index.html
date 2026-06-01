@@ -984,10 +984,24 @@ function doSearch() {
         </div>
         ${sLevelLabel[o.level]?`<span class="s-badge ${sLevelClass[o.level]}">${sLevelLabel[o.level]}</span>`:''}
         <button class="s-copy" id="sc-${i}" onclick="sCopy('${fn.replace(/'/g,"\\'")}',${i})">📋 ก๊อปปี้</button>
+        <button class="s-copy" style="background:#276749;color:white;margin-left:4px;" onclick="sOpenFolder('${o.id}')">📂 เปิดโฟลเดอร์</button>
       </div>`;
     }).join('');
 }
 
+
+function sOpenFolder(id) {
+  fetch(`http://localhost:9876/open?q=${encodeURIComponent(id)}`)
+    .then(r => r.text())
+    .then(msg => {
+      if (msg.startsWith("u2705")) {
+        alert(msg);
+      } else {
+        alert("u274c u0e44u0e21u0e48u0e1eu0e1au0e42u0e1fu0e25u0e40u0e14u0e2du0e23u0e4c u0e2bu0e23u0e37u0e2du0e42u0e1bu0e23u0e41u0e01u0e23u0e21 Folder Server u0e22u0e31u0e07u0e44u0e21u0e48u0e44u0e14u0e49u0e40u0e1bu0e34u0e14u0e04u0e48u0e30");
+      }
+    })
+    .catch(() => alert("u274c u0e01u0e23u0e38u0e13u0e32u0e40u0e1bu0e34u0e14u0e42u0e1bu0e23u0e41u0e01u0e23u0e21 Folder Server u0e01u0e48u0e2du0e19u0e19u0e30u0e04u0e48u0e30"));
+}
 function sCopy(text, i) {
   const done = () => {
     const btn = document.getElementById('sc-'+i);
