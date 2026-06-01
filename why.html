@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ทำไมบลูยังไม่ตอบ? 🩷 — Polaroid_tamsung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Prompt',sans-serif;
+    background:#fff0f5;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+  }
+
+  .app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    background:#fff0f5;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* SCREENS */
+  .screen{display:none;flex-direction:column;flex:1;}
+  .screen.active{display:flex;}
+
+  /* ── CUSTOMER ── */
+  .cust-header{
+    background:#f9b8cc;
+    padding:28px 20px 20px;
+    text-align:center;
+    border-bottom:2px dashed #f4c0d1;
+    position:relative;
+  }
+  .cust-avatar{
+    width:64px;height:64px;border-radius:50%;
+    background:#FBEAF0;border:3px solid #fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:32px;margin:0 auto 10px;
+  }
+  .cust-title{font-size:18px;font-weight:600;color:#72243E;line-height:1.4;}
+  .cust-sub{font-size:12px;color:#993556;margin-top:4px;}
+  .secret-btn{
+    position:absolute;bottom:8px;right:12px;
+    background:none;border:none;font-size:11px;
+    color:#f9b8cc;cursor:pointer;padding:6px 8px;
+    border-radius:8px;letter-spacing:2px;
+    transition:color 0.2s;
+  }
+  .secret-btn:hover{color:#ED93B1;}
+
+  .cust-body{
+    display:flex;flex-direction:column;align-items:center;
+    padding:24px 20px 20px;flex:1;
+  }
+  .cust-single{
+    background:#FBEAF0;border-radius:24px;border:2px solid #D4537E;
+    padding:28px 20px;display:flex;flex-direction:column;
+    align-items:center;text-align:center;gap:12px;width:100%;
+    animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn{from{opacity:0;transform:scale(0.85);}to{opacity:1;transform:scale(1);}}
+  .cust-single .cico{font-size:52px;}
+  .cust-single .ctitle{font-size:16px;font-weight:600;color:#72243E;}
+  .cust-single .cdesc{font-size:13px;color:#993556;line-height:1.8;}
+
+  .cust-note{
+    background:#FBEAF0;border-radius:16px;border:1.5px dashed #ED93B1;
+    padding:14px 16px;text-align:center;font-size:12px;
+    color:#72243E;line-height:1.7;margin-top:14px;width:100%;
+  }
+  .cust-footer{
+    background:#f9b8cc;border-radius:16px;padding:12px 16px;
+    text-align:center;font-size:12px;font-weight:600;
+    color:#4B1528;margin-top:12px;width:100%;
+  }
+  .no-select{
+    text-align:center;padding:48px 0;font-size:13px;
+    color:#ED93B1;line-height:2.2;
+  }
+
+  /* ── LOGIN ── */
+  .login-wrap{
+    display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding:48px 28px;flex:1;
+  }
+  .login-ico{font-size:52px;margin-bottom:14px;}
+  .login-title{font-size:18px;font-weight:600;color:#4B1528;margin-bottom:6px;}
+  .login-sub{font-size:12px;color:#993556;margin-bottom:28px;text-align:center;}
+  .login-input{
+    width:100%;border:2px solid #f4c0d1;border-radius:16px;
+    padding:14px 20px;font-size:22px;color:#4B1528;
+    background:#fff;outline:none;text-align:center;
+    letter-spacing:6px;margin-bottom:12px;
+    font-family:'Prompt',sans-serif;
+    transition:border-color 0.2s;
+  }
+  .login-input:focus{border-color:#D4537E;}
+  .login-btn{
+    width:100%;background:#D4537E;border:none;border-radius:14px;
+    padding:14px;font-size:14px;font-weight:600;color:#fff;
+    cursor:pointer;margin-bottom:10px;font-family:'Prompt',sans-serif;
+    transition:background 0.2s;
+  }
+  .login-btn:hover{background:#993556;}
+  .login-back{
+    background:none;border:none;font-size:12px;
+    color:#ED93B1;cursor:pointer;font-family:'Prompt',sans-serif;
+    padding:4px;
+  }
+  .login-err{
+    font-size:12px;color:#A32D2D;margin-bottom:10px;
+    opacity:0;transition:opacity 0.2s;text-align:center;
+  }
+  .login-err.show{opacity:1;}
+
+  /* ── ADMIN ── */
+  .admin-header{
+    background:#f9b8cc;padding:16px 20px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:2px dashed #f4c0d1;
+  }
+  .admin-htitle{font-size:14px;font-weight:600;color:#4B1528;}
+  .logout-btn{
+    background:none;border:1.5px solid #ED93B1;border-radius:10px;
+    padding:5px 12px;font-size:11px;color:#993556;cursor:pointer;
+    font-family:'Prompt',sans-serif;transition:background 0.15s;
+  }
+  .logout-btn:hover{background:#FBEAF0;}
+
+  .admin-body{padding:16px 20px;overflow-y:auto;}
+  .admin-sub{font-size:11px;color:#993556;margin-bottom:16px;}
+  .section-label{font-size:11px;font-weight:600;color:#993556;margin-bottom:10px;letter-spacing:0.05em;}
+  .reason-list{display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
+  .reason-item{
+    background:#fff;border-radius:16px;border:1.5px solid #f4c0d1;
+    padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;
+    transition:border-color 0.15s,background 0.15s;
+  }
+  .reason-item.selected{background:#FBEAF0;border:2px solid #D4537E;}
+  .reason-item .ico{font-size:24px;flex-shrink:0;}
+  .reason-item .txt{flex:1;}
+  .reason-item .rtitle{font-size:13px;font-weight:600;color:#72243E;}
+  .reason-item .rdesc{font-size:11px;color:#993556;margin-top:2px;}
+  .reason-item .check{font-size:16px;opacity:0;transition:opacity 0.15s;}
+  .reason-item.selected .check{opacity:1;}
+  .reason-item .del-btn{
+    background:none;border:none;font-size:16px;cursor:pointer;
+    color:#ED93B1;padding:4px;flex-shrink:0;
+  }
+
+  .add-box{
+    background:#fff;border-radius:16px;border:1.5px dashed #ED93B1;
+    padding:14px;margin-bottom:4px;
+  }
+  .add-row{display:flex;gap:8px;margin-bottom:10px;align-items:center;}
+  .add-row label{font-size:11px;color:#72243E;width:40px;flex-shrink:0;}
+  .add-input{
+    flex:1;border:1px solid #f4c0d1;border-radius:10px;
+    padding:8px 12px;font-size:12px;color:#4B1528;
+    background:#fff0f5;outline:none;font-family:'Prompt',sans-serif;
+    transition:border-color 0.2s;
+  }
+  .add-input:focus{border-color:#D4537E;}
+  .add-btn{
+    width:100%;background:#f9b8cc;border:none;border-radius:12px;
+    padding:10px;font-size:12px;font-weight:600;color:#4B1528;
+    cursor:pointer;margin-top:4px;font-family:'Prompt',sans-serif;
+    transition:background 0.15s;
+  }
+  .add-btn:hover{background:#ED93B1;color:#fff;}
+
+  .save-btn{
+    width:100%;background:#D4537E;border:none;border-radius:14px;
+    padding:14px;font-size:14px;font-weight:600;color:#fff;
+    cursor:pointer;margin-top:14px;font-family:'Prompt',sans-serif;
+    transition:background 0.2s;
+  }
+  .save-btn:hover{background:#993556;}
+  .saved-badge{
+    text-align:center;font-size:12px;color:#3B6D11;
+    margin-top:10px;opacity:0;transition:opacity 0.3s;
+  }
+  .saved-badge.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- CUSTOMER -->
+  <div class="screen active" id="screen-customer">
+    <div class="cust-header">
+      <div class="cust-avatar">🏠</div>
+      <div class="cust-title">ทำไมบลูยังไม่ตอบ? 🩷</div>
+      <div class="cust-sub">Polaroid_tamsung · ไม่ต้องกังวลนะคะ~</div>
+      <button class="secret-btn" onclick="goLogin()">· · ·</button>
+    </div>
+    <div class="cust-body">
+      <div id="cust-content" style="width:100%;"></div>
+      <div class="cust-note">✨ บลูตอบทุกคนภายใน <strong>24 ชั่วโมง</strong> แน่นอนค่ะ! 🩷</div>
+      <div class="cust-footer">📸 Polaroid_tamsung — ขอบคุณที่รอนะคะ 🥰</div>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="screen" id="screen-login">
+    <div class="login-wrap">
+      <div class="login-ico">🔑</div>
+      <div class="login-title">เข้าสู่หลังบ้าน</div>
+      <div class="login-sub">Polaroid_tamsung<br>เฉพาะบลูเท่านั้นนะคะ 🩷</div>
+      <input class="login-input" id="pin-input" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••">
+      <div class="login-err" id="login-err">รหัสไม่ถูกต้องค่ะ ลองใหม่นะคะ 🥺</div>
+      <button class="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+      <button class="login-back" onclick="showScreen('customer')">← กลับหน้าหลัก</button>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="screen" id="screen-admin">
+    <div class="admin-header">
+      <div class="admin-htitle">🔧 หลังบ้าน — สวัสดีบลู! 🏠</div>
+      <button class="logout-btn" onclick="logout()">ออกจากระบบ</button>
+    </div>
+    <div class="admin-body">
+      <p class="admin-sub">กดเลือกเหตุผลที่ติดอยู่ แล้วกด "บันทึก" ค่ะ</p>
+      <div class="section-label">📌 เลือกเหตุผลวันนี้</div>
+      <div class="reason-list" id="reason-list"></div>
+      <div class="section-label">✏️ เพิ่มการ์ดใหม่</div>
+      <div class="add-box">
+        <div class="add-row"><label>อิโมจิ</label><input class="add-input" id="new-ico" placeholder="🎨" maxlength="4" style="width:64px;flex:none;"></div>
+        <div class="add-row"><label>หัวข้อ</label><input class="add-input" id="new-title" placeholder="เช่น กำลังวาดรูปให้ลูกค้า"></div>
+        <div class="add-row"><label>รายละเอียด</label><input class="add-input" id="new-desc" placeholder="เช่น รีบๆ เสร็จแล้วตอบเลยค่ะ!"></div>
+        <button class="add-btn" onclick="addReason()">➕ เพิ่มการ์ดนี้</button>
+      </div>
+      <button class="save-btn" onclick="saveStatus()">💾 บันทึกสถานะ</button>
+      <div class="saved-badge" id="saved-badge">✅ บันทึกแล้ว! ลูกค้าเห็นแล้วค่ะ</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const PIN = '11122540';
+const STORAGE_KEY_REASONS = 'pt_reasons';
+const STORAGE_KEY_SELECTED = 'pt_selected';
+
+const DEFAULT = [
+  {ico:'📦', title:'กำลังแพ็คของให้ลูกค้า', desc:'บลูกำลังห่อสติกเกอร์ด้วยความรักอยู่ค่ะ 🎀'},
+  {ico:'🛵', title:'ออกไปส่งของ / ซื้อของ', desc:'บลูออกนอกบ้านอยู่ค่ะ กลับมาตอบทันทีเลย 💨'},
+  {ico:'😴', title:'กำลังพักผ่อน', desc:'มนุษย์ต้องนอนบ้างนะคะ ฮ่าๆ 😅'},
+  {ico:'🌸', title:'วันอาทิตย์ = วันหยุดบลู', desc:'วันจันทร์เปิดใหม่ บลูตอบทันทีเลยค่ะ 🌼'},
+];
+
+let reasons = JSON.parse(localStorage.getItem(STORAGE_KEY_REASONS) || 'null') || DEFAULT.map(r => ({...r}));
+let selectedIdx = parseInt(localStorage.getItem(STORAGE_KEY_SELECTED) ?? '-1');
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function goLogin() {
+  showScreen('login');
+  document.getElementById('pin-input').value = '';
+  document.getElementById('login-err').classList.remove('show');
+}
+
+function doLogin() {
+  const val = document.getElementById('pin-input').value;
+  if (val === PIN) {
+    showScreen('admin');
+    renderAdmin();
+  } else {
+    document.getElementById('login-err').classList.add('show');
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-input').focus();
+  }
+}
+
+function logout() {
+  showScreen('customer');
+}
+
+function renderAdmin() {
+  const list = document.getElementById('reason-list');
+  list.innerHTML = '';
+  reasons.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = 'reason-item' + (i === selectedIdx ? ' selected' : '');
+    d.innerHTML = `<span class="ico">${r.ico}</span><div class="txt"><div class="rtitle">${r.title}</div><div class="rdesc">${r.desc}</div></div><span class="check">✅</span><button class="del-btn" title="ลบ">🗑️</button>`;
+    d.querySelector('.del-btn').onclick = e => {
+      e.stopPropagation();
+      reasons.splice(i, 1);
+      if (selectedIdx === i) selectedIdx = -1;
+      else if (selectedIdx > i) selectedIdx--;
+      renderAdmin();
+    };
+    d.onclick = () => { selectedIdx = i; renderAdmin(); };
+    list.appendChild(d);
+  });
+}
+
+function renderCustomer() {
+  const cc = document.getElementById('cust-content');
+  if (selectedIdx < 0 || selectedIdx >= reasons.length) {
+    cc.innerHTML = '<div class="no-select">🌸 บลูยังไม่ได้ตั้งสถานะวันนี้ค่ะ<br><span style="font-size:11px;color:#ED93B1;">รอติดตามได้เลยนะคะ 🩷</span></div>';
+    return;
+  }
+  const r = reasons[selectedIdx];
+  cc.innerHTML = `<div class="cust-single"><div class="cico">${r.ico}</div><div class="ctitle">${r.title}</div><div class="cdesc">${r.desc}</div></div>`;
+}
+
+function addReason() {
+  const ico = document.getElementById('new-ico').value.trim() || '📌';
+  const title = document.getElementById('new-title').value.trim();
+  const desc = document.getElementById('new-desc').value.trim();
+  if (!title) { alert('ใส่หัวข้อด้วยนะคะ!'); return; }
+  reasons.push({ico, title, desc});
+  ['new-ico','new-title','new-desc'].forEach(id => document.getElementById(id).value = '');
+  renderAdmin();
+}
+
+function saveStatus() {
+  localStorage.setItem(STORAGE_KEY_REASONS, JSON.stringify(reasons));
+  localStorage.setItem(STORAGE_KEY_SELECTED, String(selectedIdx));
+  renderCustomer();
+  const b = document.getElementById('saved-badge');
+  b.classList.add('show');
+  setTimeout(() => b.classList.remove('show'), 2500);
+}
+
+document.getElementById('pin-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+renderCustomer();
+</script>
+</body>
+</html>
