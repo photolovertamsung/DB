@@ -917,7 +917,15 @@ async function openEdit(orderId){
     const json = await res.json();
     if(json.ok){
       document.getElementById('editAddress').value = json.address || '';
-      document.getElementById('editShipDate').value = json.shipDate || '';
+      // แปลง ISO date → dd/mm/yyyy
+      let sd = json.shipDate || '';
+      if(sd.includes('T')){
+        const d = new Date(sd);
+        if(!isNaN(d)){
+          sd = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+        }
+      }
+      document.getElementById('editShipDate').value = sd;
       document.getElementById('editItems').value = json.items || '';
     } else {
       showEditStatus('err', 'ไม่พบข้อมูลออเดอร์นี้ใน Sheet');
