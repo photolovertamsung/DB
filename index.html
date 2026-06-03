@@ -52,9 +52,9 @@ main{max-width:920px;margin:0 auto;padding:16px 16px 80px;display:flex;flex-dire
 .zone-z2 .zone-stripe{background:var(--pink)}.zone-z2 .zone-title{color:var(--pink)}
 .zone-z3 .zone-stripe{background:var(--green)}.zone-z3 .zone-title{color:var(--green)}
 .zone-z4 .zone-stripe{background:var(--gray)}.zone-z4 .zone-title{color:var(--gray)}
-.col-head{display:grid;grid-template-columns:120px 1fr 90px 115px 110px 38px 38px;padding:5px 14px;gap:8px;background:var(--bg);border-bottom:1px solid var(--border)}
+.col-head{display:grid;grid-template-columns:120px 1fr 90px 115px 110px 38px 38px 38px 38px;padding:5px 14px;gap:8px;background:var(--bg);border-bottom:1px solid var(--border)}
 .col-head span{font-size:10px;color:var(--text-m);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono)}
-.order-row{display:grid;grid-template-columns:120px 1fr 90px 115px 110px 38px 38px;grid-template-rows:auto;align-items:center;padding:10px 14px;gap:8px;border-bottom:1px solid var(--border);transition:background .1s}
+.order-row{display:grid;grid-template-columns:120px 1fr 90px 115px 110px 38px 38px 38px 38px;grid-template-rows:auto;align-items:center;padding:10px 14px;gap:8px;border-bottom:1px solid var(--border);transition:background .1s}
 .order-row:last-child{border-bottom:none}.order-row:hover{background:var(--bg)}
 .cell-id{font-family:var(--mono);font-size:11px;color:var(--text-m);font-weight:500}
 .cell-name{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -120,6 +120,16 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
 .s-bar{display:flex;gap:8px;margin-bottom:1rem}
 .s-in{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);outline:none;background:var(--surface)}
 .s-in:focus{border-color:var(--pink)}.s-btn{padding:9px 16px;background:var(--text);color:#fff;border:none;border-radius:8px;font-size:12px;font-family:var(--sans);cursor:pointer}
+/* dashboard search bar */
+.db-search-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:8px}
+.db-search-icon{font-size:13px;flex-shrink:0;opacity:.5}
+.db-search-in{flex:1;border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:13px;font-family:var(--sans);outline:none;background:var(--bg);color:var(--text);transition:border-color .15s}
+.db-search-in:focus{border-color:var(--pink);background:var(--surface)}
+.db-search-clear{background:none;border:none;color:var(--text-m);font-size:13px;cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0}
+.db-search-clear:hover{background:var(--gray-l);color:var(--text)}
+.row-search-hide{display:none!important}
+.row-search-match .cell-id,.row-search-match .cell-name{color:var(--pink)}
+.db-search-empty{padding:20px 14px;text-align:center;font-size:11px;color:var(--text-m)}
 .s-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
 .s-info{flex:1;min-width:0}.s-name{font-size:13px;font-weight:500;word-break:break-all}.s-meta{font-size:11px;color:var(--text-m);margin-top:2px}
 .s-badge{font-size:10px;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
@@ -162,6 +172,28 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
 .slip-footer{border-top:1px solid #eee;padding:10px 14px;display:flex;gap:8px;justify-content:flex-end;background:#f8f8f6}
 .slip-btn-print{background:#111;color:#fff;border:none;border-radius:7px;padding:9px 20px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer}
 .slip-btn-cancel{background:transparent;color:#888;border:1px solid #e0e0dc;border-radius:7px;padding:9px 14px;font-family:var(--sans);font-size:13px;cursor:pointer}
+/* edit modal */
+#editModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;align-items:center;justify-content:center;padding:16px}
+#editModal.open{display:flex}
+.edit-wrap{background:var(--surface);border-radius:14px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;font-family:var(--sans)}
+.edit-topbar{background:var(--pink);color:#fff;padding:11px 16px;display:flex;align-items:center;justify-content:space-between}
+.edit-topbar-title{font-size:13px;font-weight:700}
+.edit-topbar-id{font-family:var(--mono);font-size:11px;opacity:.8}
+.edit-close{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;font-family:var(--sans);font-weight:600}
+.edit-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.edit-lbl{font-size:10px;font-weight:600;color:var(--text-m);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
+.edit-in,.edit-ta{background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;padding:9px 11px;outline:none;width:100%;transition:border-color .15s}
+.edit-in:focus,.edit-ta:focus{border-color:var(--pink)}
+.edit-ta{resize:vertical;min-height:72px}
+.edit-footer{border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:8px;justify-content:flex-end;background:var(--bg)}
+.edit-btn-save{background:var(--pink);color:#fff;border:none;border-radius:8px;padding:9px 22px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.edit-btn-save:hover{background:var(--pink-d)}.edit-btn-save:disabled{background:var(--border);color:var(--text-m);cursor:not-allowed}
+.edit-btn-cancel{background:transparent;color:var(--text-m);border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-family:var(--sans);font-size:13px;cursor:pointer}
+.edit-status{display:none;align-items:center;gap:8px;padding:8px 11px;border-radius:8px;font-size:12px;margin:0 16px 12px}
+.edit-status.show{display:flex}
+.edit-st-ok{background:var(--green-l);border:1px solid rgba(15,110,86,.2);color:var(--green)}
+.edit-st-err{background:var(--red-l);border:1px solid rgba(163,45,45,.2);color:var(--red)}
+.edit-st-load{background:var(--pink-l);border:1px solid rgba(212,83,126,.2);color:var(--pink)}
 @keyframes spin{to{transform:rotate(360deg)}}.spin{display:inline-block;animation:spin 1s linear infinite}
 @media print{
   @page{size:100mm 150mm;margin:0}
@@ -171,7 +203,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
   .no-print{display:none!important}
 }
 @media(max-width:640px){
-  .col-head,.order-row{grid-template-columns:100px 1fr 70px 90px 90px 32px 32px}
+  .col-head,.order-row{grid-template-columns:100px 1fr 70px 90px 90px 32px 32px 32px 32px}
   header{padding:0 12px}
 }
 </style>
@@ -210,6 +242,11 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
     <button class="chip" onclick="setFilter('1',this)">งานไว</button>
     <button class="chip" onclick="setFilter('2',this)">งานหลัก</button>
     <button class="chip" onclick="setFilter('3',this)">งานใหญ่</button>
+  </div>
+  <div class="db-search-bar">
+    <span class="db-search-icon">🔍</span>
+    <input type="text" id="dbSearchInput" class="db-search-in" placeholder="ค้นหา PT-XXXXX หรือชื่อลูกค้า..." oninput="dbSearch(this.value)" autocomplete="off"/>
+    <button class="db-search-clear" id="dbSearchClear" onclick="dbSearchClear()" style="display:none">✕</button>
   </div>
   <main id="main"></main>
   <div id="done-box">
@@ -357,6 +394,38 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
   </div>
 </div>
 
+<!-- EDIT MODAL -->
+<div id="editModal">
+  <div class="edit-wrap">
+    <div class="edit-topbar">
+      <div>
+        <div class="edit-topbar-title">✏️ แก้ไขออเดอร์</div>
+        <div class="edit-topbar-id" id="editOrderIdLabel">—</div>
+      </div>
+      <button class="edit-close" onclick="closeEdit()">✕ ปิด</button>
+    </div>
+    <div class="edit-body">
+      <div>
+        <div class="edit-lbl">📦 ที่อยู่จัดส่ง</div>
+        <textarea class="edit-ta" id="editAddress" placeholder="ชื่อ + ที่อยู่ + เบอร์โทร" style="min-height:80px"></textarea>
+      </div>
+      <div>
+        <div class="edit-lbl">📅 รอบจัดส่ง</div>
+        <input class="edit-in" type="text" id="editShipDate" placeholder="30/05/2026"/>
+      </div>
+      <div>
+        <div class="edit-lbl">🗒 รายการสินค้า</div>
+        <textarea class="edit-ta" id="editItems" placeholder="รายการสินค้า..." style="min-height:72px"></textarea>
+      </div>
+    </div>
+    <div class="edit-status" id="editStatus"><span id="editStatusMsg"></span></div>
+    <div class="edit-footer">
+      <button class="edit-btn-cancel" onclick="closeEdit()">ยกเลิก</button>
+      <button class="edit-btn-save" id="editSaveBtn" onclick="saveEdit()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ════════ CONFIG ════════
 const SHEET_ID   = '14oLUa0F6VlCxQ2LZGsJgV4oGXICylQPC6vO_aq6deiI';
@@ -418,6 +487,48 @@ function dateClass(dt){
 }
 function isToday(dt){if(!dt)return false;const t=new Date();t.setHours(0,0,0,0);const d=new Date(dt);d.setHours(0,0,0,0);return+d===+t;}
 function isLate(dt){if(!dt)return false;const t=new Date();t.setHours(0,0,0,0);return dt<t;}
+
+// ════════ DASHBOARD SEARCH ════════
+let dbSearchQuery = '';
+function dbSearch(val){
+  dbSearchQuery = val.trim().toLowerCase();
+  const clearBtn = document.getElementById('dbSearchClear');
+  if(clearBtn) clearBtn.style.display = dbSearchQuery ? '' : 'none';
+  applyDbSearch();
+}
+function dbSearchClear(){
+  const inp = document.getElementById('dbSearchInput');
+  if(inp) inp.value = '';
+  dbSearchQuery = '';
+  document.getElementById('dbSearchClear').style.display = 'none';
+  applyDbSearch();
+}
+function applyDbSearch(){
+  if(!dbSearchQuery){ // ล้าง search ทั้งหมด
+    document.querySelectorAll('.order-row').forEach(r=>{r.classList.remove('row-search-hide','row-search-match');});
+    document.querySelectorAll('.zone').forEach(z=>{z.style.display='';});
+    document.querySelectorAll('.db-search-empty').forEach(e=>e.remove());
+    return;
+  }
+  document.querySelectorAll('.zone').forEach(zone=>{
+    const rows = zone.querySelectorAll('.order-row');
+    let visCount = 0;
+    rows.forEach(row=>{
+      const idEl = row.querySelector('.cell-id');
+      const nameEl = row.querySelector('.cell-name');
+      const idTxt = (idEl?.textContent||'').toLowerCase();
+      const nameTxt = (nameEl?.textContent||'').toLowerCase();
+      const match = idTxt.includes(dbSearchQuery) || nameTxt.includes(dbSearchQuery);
+      row.classList.toggle('row-search-hide', !match);
+      row.classList.toggle('row-search-match', match);
+      if(match) visCount++;
+    });
+    // ซ่อน zone ที่ไม่มีผลลัพธ์เลย
+    zone.style.display = visCount === 0 ? 'none' : '';
+    // ลบ empty msg เก่าก่อน
+    zone.querySelectorAll('.db-search-empty').forEach(e=>e.remove());
+  });
+}
 
 // ════════ LOAD DATA ════════
 async function loadData(){
@@ -483,6 +594,7 @@ function renderAll(){
     ${zoneHTML('z2','📌 วันนี้',z2)}
     ${zoneHTML('z3','📅 อนาคต',z3)}
     ${zoneHTML('z4','❓ ไม่ระบุวัน',z4)}`;
+  if(dbSearchQuery) applyDbSearch();
 }
 
 function zoneHTML(id,title,orders){
@@ -499,6 +611,8 @@ function zoneHTML(id,title,orders){
       <span>ขั้นตอน</span>
       <span style="text-align:center">📂</span>
       <span style="text-align:center">✓</span>
+      <span style="text-align:center">🖨️</span>
+      <span style="text-align:center">✏️</span>
     </div>
     ${orders.map(rowHTML).join('')}
   </div>`;
@@ -524,6 +638,8 @@ function rowHTML(o){
     </span>
     <span class="cell-folder"><button class="btn-folder" onclick="sOpenFolder('${o.id}','${o.id} ${o.name} ${fmtDateFolder(o.date)} ${levelLabel(lv)}')" title="เปิด/สร้างโฟลเดอร์">📂</button></span>
     <span class="cell-check"><input type="checkbox" ${isDoneLocal?'checked':''} onchange="markDone('${o.id}',this.checked)" title="ติ๊กเสร็จ → อัปเดต Sheet"></span>
+    <span class="cell-folder"><button class="btn-folder" onclick="openSlipFromRow('${o.id}','${o.name.replace(/'/g,"\\'")}','${fmtDate(o.date)}')" title="พิมพ์ใบรายการ">🖨️</button></span>
+    <span class="cell-folder"><button class="btn-folder" onclick="openEdit('${o.id}')" title="แก้ไขออเดอร์">✏️</button></span>
     ${hasDetail?`<div class="detail-panel" id="detail-${o.id}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div>${detail.trim()}</div>
@@ -759,6 +875,95 @@ function lockPT(el){let v=el.value;if(!v.startsWith('PT-'))v='PT-';v='PT-'+v.sli
 async function loadNextPT(){try{const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!G2:G?key=${API_KEY}`;const res=await fetch(url);const json=await res.json();const rows=json.values||[];let max=0;for(const row of rows){const m=(row[0]||'').trim().match(/^PT-(\d+)$/);if(m)max=Math.max(max,parseInt(m[1]));}document.getElementById('pOrderId').value='PT-'+String(max+1).padStart(5,'0');}catch(e){document.getElementById('pOrderId').value='PT-';}}
 function openSlip(){document.getElementById('sOrderId').textContent=document.getElementById('pOrderId').value.trim()||'—';document.getElementById('sRound').textContent='รอบ: '+(document.getElementById('pShipDate').value.trim()||'—');document.getElementById('sAddress').textContent=document.getElementById('pAddress').value.trim()||'—';document.getElementById('sItems').textContent=document.getElementById('pItems').value.trim()||'—';document.getElementById('slipModal').classList.add('open');}
 function closeSlip(){document.getElementById('slipModal').classList.remove('open');}
+
+async function openSlipFromRow(orderId, name, shipDate){
+  // เปิด modal พร้อมข้อมูลพื้นฐานก่อน
+  document.getElementById('sOrderId').textContent = orderId || '—';
+  document.getElementById('sRound').textContent = 'รอบ: ' + (shipDate || '—');
+  document.getElementById('sAddress').textContent = '⏳ กำลังดึงข้อมูล...';
+  document.getElementById('sItems').textContent = '⏳ กำลังดึงข้อมูล...';
+  document.getElementById('slipModal').classList.add('open');
+  // ดึงข้อมูลเพิ่มเติมจาก Sheet
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=getOrder&orderId=' + encodeURIComponent(orderId));
+    const json = await res.json();
+    if (json.ok) {
+      document.getElementById('sRound').textContent = 'รอบ: ' + (json.shipDate || shipDate || '—');
+      document.getElementById('sAddress').textContent = json.address || name || '—';
+      document.getElementById('sItems').textContent = json.items || '—';
+    } else {
+      document.getElementById('sAddress').textContent = name || '—';
+      document.getElementById('sItems').textContent = '(ไม่พบข้อมูลใน Sheet)';
+    }
+  } catch(e) {
+    document.getElementById('sAddress').textContent = name || '—';
+    document.getElementById('sItems').textContent = '(ดึงข้อมูลไม่ได้: ' + e.message + ')';
+  }
+}
+
+// ════════ EDIT MODAL ════════
+let editCurrentId = '';
+async function openEdit(orderId){
+  editCurrentId = orderId;
+  document.getElementById('editOrderIdLabel').textContent = orderId;
+  document.getElementById('editAddress').value = '⏳ กำลังดึงข้อมูล...';
+  document.getElementById('editShipDate').value = '';
+  document.getElementById('editItems').value = '⏳ กำลังดึงข้อมูล...';
+  document.getElementById('editStatus').className = 'edit-status';
+  document.getElementById('editSaveBtn').disabled = true;
+  document.getElementById('editModal').classList.add('open');
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=getOrder&orderId=' + encodeURIComponent(orderId));
+    const json = await res.json();
+    if(json.ok){
+      document.getElementById('editAddress').value = json.address || '';
+      document.getElementById('editShipDate').value = json.shipDate || '';
+      document.getElementById('editItems').value = json.items || '';
+    } else {
+      showEditStatus('err', 'ไม่พบข้อมูลออเดอร์นี้ใน Sheet');
+      document.getElementById('editAddress').value = '';
+      document.getElementById('editItems').value = '';
+    }
+  } catch(e) {
+    showEditStatus('err', 'ดึงข้อมูลไม่ได้: ' + e.message);
+  }
+  document.getElementById('editSaveBtn').disabled = false;
+}
+function closeEdit(){
+  document.getElementById('editModal').classList.remove('open');
+  editCurrentId = '';
+}
+async function saveEdit(){
+  if(!editCurrentId) return;
+  const address = document.getElementById('editAddress').value.trim();
+  const shipDate = document.getElementById('editShipDate').value.trim();
+  const items = document.getElementById('editItems').value.trim();
+  showEditStatus('load', 'กำลังบันทึก...');
+  document.getElementById('editSaveBtn').disabled = true;
+  const params = new URLSearchParams({action:'updateOrder', orderId:editCurrentId, address, shipDate, items});
+  try {
+    await new Promise(resolve => {
+      const img = new Image();
+      img.onload = img.onerror = () => resolve();
+      img.src = SCRIPT_URL + '?' + params.toString();
+      setTimeout(resolve, 3000);
+    });
+    showEditStatus('ok', '✨ บันทึกสำเร็จแล้วค่ะ!');
+    // อัปเดต local date ถ้ามีการเปลี่ยนรอบจัดส่ง
+    const o = allOrders.find(x => x.id === editCurrentId);
+    if(o && shipDate){ o.date = parseDate(shipDate); renderAll(); }
+    setTimeout(closeEdit, 1200);
+  } catch(e) {
+    showEditStatus('err', 'บันทึกไม่ได้: ' + e.message);
+  } finally {
+    document.getElementById('editSaveBtn').disabled = false;
+  }
+}
+function showEditStatus(type, msg){
+  const bar = document.getElementById('editStatus');
+  bar.className = 'edit-status show edit-st-' + (type==='ok'?'ok':type==='err'?'err':'load');
+  document.getElementById('editStatusMsg').textContent = msg;
+}
 
 // ════════ BOARD ════════
 const B_STEPS=[{id:1,emoji:'💸',label:'โอนเงินแล้ว',cls:'#E3F2FD',color:'#1565C0',dot:'#1565C0'},{id:2,emoji:'📂',label:'โหลดไฟล์แล้ว',cls:'#FFF3E0',color:'#E65100',dot:'#E65100'},{id:3,emoji:'⏳',label:'รอคิวผลิต',cls:'#FFF8E1',color:'#F57F17',dot:'#F9A825'},{id:4,emoji:'🖨️',label:'กำลังผลิต',cls:'#F3E5F5',color:'#6A1B9A',dot:'#8E24AA'},{id:5,emoji:'📦',label:'แพ็กของแล้ว',cls:'#E8F5E9',color:'#2E7D32',dot:'#43A047'},{id:6,emoji:'🚚',label:'จัดส่งแล้ว',cls:'#E1F5EE',color:'#0F6E56',dot:'#1D9E75'}];
