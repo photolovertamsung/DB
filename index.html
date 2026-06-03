@@ -333,7 +333,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
     </div>
     <div class="t-card">
       <div class="t-title"><span>③</span> Push เข้า Sheet</div>
-      <div class="t-api">https://script.google.com/macros/s/AKfycbzDUAu4yIptBsEFb-SihqmR7RF9nDUHDQXUZFlVwLQ9_8f9mLJJE1pi2jKAQyA5yinZ/exec</div>
+      <div class="t-api">https://script.google.com/macros/s/AKfycbz0nWU7ihV_y9FVjnbWLlwWojtcpZisJpTO8c_8rpOAaALUQtT5j8dx2Qf-KXznMf9Y/exec</div>
       <div style="display:flex;gap:8px">
         <button class="tb tb-push" onclick="pushOrder()" id="btnPush" style="flex:1">🚀 Push เข้า Sheet</button>
         <button class="tb tb-print" onclick="openSlip()" style="flex-shrink:0">🖨️ ใบรายการ</button>
@@ -431,7 +431,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
 const SHEET_ID   = '14oLUa0F6VlCxQ2LZGsJgV4oGXICylQPC6vO_aq6deiI';
 const API_KEY    = 'AIzaSyCLhgZL3uWKQsVXDNrzsE6EVuIp-dGDe3s';
 const TAB_NAME   = 'data';
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyg2rRSTW34ACTtqeyOQm681alaF7ymsCXP-JOljJr1UTV0jIZZnCju7ccKr965GKfD/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0nWU7ihV_y9FVjnbWLlwWojtcpZisJpTO8c_8rpOAaALUQtT5j8dx2Qf-KXznMf9Y/exec';
 const B_CSV      = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRTvOZSL9sX3ezpv8wGlhHB4o50K6dPYPs5L_64JjQSbVPGtutC-YYixoMe_z7yJ8MY2rdmN64MEZTE/pub?output=csv`;
 const COL = { name:1, date:4, orderId:6, level:14, step:7, detail:13, done:15 };
 const STEP_LABELS = {1:'💸 โอนเงิน',2:'📂 โหลดไฟล์',3:'⏳ รอคิว',4:'🖨️ ผลิต',5:'📦 แพ็ก',6:'🚚 จัดส่ง'};
@@ -751,6 +751,8 @@ function renderToday(){
         <span>ขั้นตอน</span>
         <span style="text-align:center">📂</span>
         <span style="text-align:center">✓</span>
+        <span style="text-align:center">🖨️</span>
+        <span style="text-align:center">✏️</span>
       </div>
       ${orders.map(rowHTML).join('')}
     </div>
@@ -948,19 +950,18 @@ async function saveEdit(){
   const items = document.getElementById('editItems').value.trim();
   showEditStatus('load', 'กำลังบันทึก...');
   document.getElementById('editSaveBtn').disabled = true;
-  const params = new URLSearchParams({action:'updateOrder', orderId:editCurrentId, address, shipDate, items});
   try {
-    await new Promise(resolve => {
-      const img = new Image();
-      img.onload = img.onerror = () => resolve();
-      img.src = SCRIPT_URL + '?' + params.toString();
-      setTimeout(resolve, 3000);
-    });
-    showEditStatus('ok', '✨ บันทึกสำเร็จแล้วค่ะ!');
-    // อัปเดต local date ถ้ามีการเปลี่ยนรอบจัดส่ง
-    const o = allOrders.find(x => x.id === editCurrentId);
-    if(o && shipDate){ o.date = parseDate(shipDate); renderAll(); }
-    setTimeout(closeEdit, 1200);
+    const params = new URLSearchParams({action:'updateOrder', orderId:editCurrentId, address, shipDate, items});
+    const res = await fetch(SCRIPT_URL + '?' + params.toString(), {redirect:'follow'});
+    const json = await res.json();
+    if(json.ok){
+      showEditStatus('ok', '✨ บันทึกสำเร็จแล้วค่ะ!');
+      const o = allOrders.find(x => x.id === editCurrentId);
+      if(o && shipDate){ o.date = parseDate(shipDate); renderAll(); }
+      setTimeout(closeEdit, 1200);
+    } else {
+      showEditStatus('err', json.msg || 'บันทึกไม่สำเร็จ');
+    }
   } catch(e) {
     showEditStatus('err', 'บันทึกไม่ได้: ' + e.message);
   } finally {
