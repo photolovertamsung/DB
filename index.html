@@ -832,6 +832,23 @@ function doSearch(){
 function sCopy(text,i){const done=()=>{const b=document.getElementById('sc-'+i);b.classList.add('copied');b.textContent='✅';setTimeout(()=>{b.classList.remove('copied');b.textContent='📋 ก๊อป';},2000);};navigator.clipboard?.writeText(text).then(done).catch(()=>{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();});}
 function sOpenFolder(id,folderName){fetch(`http://localhost:9876/open?q=${encodeURIComponent(id)}`).then(r=>r.text()).then(msg=>{if(msg.startsWith('OPENED:')){}else if(msg.startsWith('NOTFOUND:')){if(confirm(`ไม่พบโฟลเดอร์ "${folderName}"\nต้องการสร้างใหม่ไหมค่ะ?`)){fetch(`http://localhost:9876/create?name=${encodeURIComponent(folderName)}`).then(r=>r.text()).then(res=>{if(res.startsWith('CREATED:'))alert('✅ สร้างและเปิดโฟลเดอร์แล้วค่ะ!');else alert('❌ '+res);});}}else alert('❌ '+msg);}).catch(()=>alert('❌ กรุณาเปิดโปรแกรม Folder Server ก่อนค่ะ'));}
 
+// ════════ THAI DATE CONVERTER ════════
+function thaiDateToShort(str){
+  // แปลง "วันเสาร์ที่ 13 มิ.ย. 2569" หรือ "13 มิ.ย. 2569" → "13/06/69"
+  const monthMap={'ม.ค.':1,'ก.พ.':2,'มี.ค.':3,'เม.ย.':4,'พ.ค.':5,'มิ.ย.':6,'ก.ค.':7,'ส.ค.':8,'ก.ย.':9,'ต.ค.':10,'พ.ย.':11,'ธ.ค.':12,
+    'มกราคม':1,'กุมภาพันธ์':2,'มีนาคม':3,'เมษายน':4,'พฤษภาคม':5,'มิถุนายน':6,'กรกฎาคม':7,'สิงหาคม':8,'กันยายน':9,'ตุลาคม':10,'พฤศจิกายน':11,'ธันวาคม':12};
+  const m=str.match(/(\d{1,2})\s+([\u0E00-\u0E7F.]+)\s+(\d{4})/);
+  if(!m) return null;
+  const dd=String(parseInt(m[1])).padStart(2,'0');
+  const mo=monthMap[m[2].trim()];
+  if(!mo) return null;
+  const mm=String(mo).padStart(2,'0');
+  let yr=parseInt(m[3]);
+  if(yr>2500) yr-=543; // แปลง พ.ศ. → ค.ศ.
+  const yy=String(yr).slice(-2);
+  return dd+'/'+mm+'/'+yy;
+}
+
 // ════════ PARSER ════════
 function parseOrder(){
   const raw=document.getElementById('rawText').value.trim(); if(!raw) return;
@@ -840,8 +857,15 @@ function parseOrder(){
   if(nameLine) document.getElementById('pName').value=nameLine;
   const phoneMatch=raw.replace(/[-\s]/g,'').match(/0[6-9]\d{8}/);
   if(phoneMatch) document.getElementById('pPhone').value=phoneMatch[0];
+  // จับรูปแบบ dd/mm/yyyy ก่อน ถ้าไม่มีลองจับรูปแบบภาษาไทย เช่น "วันเสาร์ที่ 13 มิ.ย. 2569"
   const dateMatch=raw.match(/รอบจัดส่ง[^:]*:\s*(\d{1,2}\/\d{1,2}\/\d{4})/);
-  if(dateMatch) document.getElementById('pShipDate').value=dateMatch[1];
+  const dateThaiMatch=raw.match(/รอบจัดส่ง[^:]*:\s*([วันจันทร์วันอังคารวันพุธวันพฤหัสวันศุกร์วันเสาร์วันอาทิตย์]*ที่\s*)?(\d{1,2}\s+[\u0E00-\u0E7F.]+\s+\d{4})/);
+  if(dateMatch){
+    document.getElementById('pShipDate').value=dateMatch[1];
+  } else if(dateThaiMatch){
+    const converted=thaiDateToShort(dateThaiMatch[2]);
+    if(converted) document.getElementById('pShipDate').value=converted;
+  }
   const provMatch=raw.match(/จ\.\s*([^\s\d\n,()]+)|จังหวัด\s*([^\s\d\n,()]+)|(กรุงเทพฯ|กรุงเทพมหานคร|กรุงเทพ)/);
   if(provMatch) document.getElementById('pProvince').value=(provMatch[1]||provMatch[2]||provMatch[3]).trim();
   const addrLine=lines.find(l=>/\d{5}/.test(l)&&l.length>10);
@@ -871,7 +895,14 @@ async function pushOrder(){
   finally{document.getElementById('btnPush').disabled=false;}
 }
 function showPStatus(type,msg){const bar=document.getElementById('pStatus'),dot=document.getElementById('pDot');bar.className='t-st show t-st-'+(type==='ok'?'ok':type==='err'?'err':'load');dot.className='t-dot t-dot-'+(type==='ok'?'ok':type==='err'?'err':'load');document.getElementById('pMsg').textContent=msg;}
-function genMsg(){const orderId=document.getElementById('pOrderId').value.trim()||'PT-XXXXX',shipDate=document.getElementById('pShipDate').value.trim()||'—';document.getElementById('msgOut').value=`ขอบคุณมากๆเลยน้าค้าที่อุดหนุน 🥰\n\n✅ รับออเดอร์เรียบร้อยแล้วค่ะ\nตรวจสอบไฟล์และยอดชำระครบแล้วน้า ตอนนี้งานเข้าสู่คิวผลิตเรียบร้อยค่ะ 🎉\n\n🔖 รหัสออเดอร์ : ${orderId}\n📦 รอบจัดส่ง : ${shipDate}\n🔔 แจ้งเลขพัสดุช่วง 22:00 น. เป็นต้นไป\n\n📲 ติดตามสถานะงานได้ที่\nhttps://photolovertamsung.github.io/polaroid-tracking/index.html\n\n⏳ ข้อมูลจะอัปเดตหลังโอนประมาณ 24 ชั่วโมงน้า\nหากมีคำถามทักหาบลูได้ตลอดนะคะ 💙`;}
+function shortDate(v){
+  // แปลง dd/mm/yyyy → dd/mm/yy (2 หลักสุดท้าย) หรือคืนค่าเดิม
+  if(!v) return '—';
+  const p=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(p){const yy=String(parseInt(p[3])%100).padStart(2,'0');return p[1]+'/'+p[2].padStart(2,'0')+'/'+yy;}
+  return v;
+}
+function genMsg(){const orderId=document.getElementById('pOrderId').value.trim()||'PT-XXXXX',shipDate=shortDate(document.getElementById('pShipDate').value.trim());document.getElementById('msgOut').value=`ขอบคุณมากๆเลยน้าค้าที่อุดหนุน 🥰\n\n✅ รับออเดอร์เรียบร้อยแล้วค่ะ\nตรวจสอบไฟล์และยอดชำระครบแล้วน้า ตอนนี้งานเข้าสู่คิวผลิตเรียบร้อยค่ะ 🎉\n\n🔖 รหัสออเดอร์ : ${orderId}\n📦 รอบจัดส่ง : ${shipDate}\n🔔 แจ้งเลขพัสดุช่วง 22:00 น. เป็นต้นไป\n\n📲 ติดตามสถานะงานได้ที่\nhttps://photolovertamsung.github.io/polaroid-tracking/index.html\n\n⏳ ข้อมูลจะอัปเดตหลังโอนประมาณ 24 ชั่วโมงน้า\nหากมีคำถามทักหาบลูได้ตลอดนะคะ 💙`;}
 function copyMsg(){const ta=document.getElementById('msgOut');if(!ta.value)genMsg();const btn=document.getElementById('btnCopyMsg');navigator.clipboard?.writeText(ta.value).then(()=>{btn.textContent='✅ คัดลอกแล้ว';setTimeout(()=>{btn.textContent='📋 คัดลอก';},2000);}).catch(()=>{ta.select();document.execCommand('copy');btn.textContent='✅ คัดลอกแล้ว';setTimeout(()=>{btn.textContent='📋 คัดลอก';},2000);});}
 function lockPT(el){let v=el.value;if(!v.startsWith('PT-'))v='PT-';v='PT-'+v.slice(3).replace(/[^0-9]/g,'').slice(0,5);el.value=v;}
 async function loadNextPT(){try{const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!G2:G?key=${API_KEY}`;const res=await fetch(url);const json=await res.json();const rows=json.values||[];let max=0;for(const row of rows){const m=(row[0]||'').trim().match(/^PT-(\d+)$/);if(m)max=Math.max(max,parseInt(m[1]));}document.getElementById('pOrderId').value='PT-'+String(max+1).padStart(5,'0');}catch(e){document.getElementById('pOrderId').value='PT-';}}
