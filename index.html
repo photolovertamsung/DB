@@ -253,13 +253,29 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
     <button class="chip" onclick="setFilter('1',this)">งานไว</button>
     <button class="chip" onclick="setFilter('2',this)">งานหลัก</button>
     <button class="chip" onclick="setFilter('3',this)">งานใหญ่</button>
+    <button class="chip chip-mess" onclick="setFilter('mess',this)">🛵 แมส</button>
   </div>
   <div class="db-search-bar">
     <span class="db-search-icon">🔍</span>
     <input type="text" id="dbSearchInput" class="db-search-in" placeholder="ค้นหา PT-XXXXX หรือชื่อลูกค้า..." oninput="dbSearch(this.value)" autocomplete="off"/>
     <button class="db-search-clear" id="dbSearchClear" onclick="dbSearchClear()" style="display:none">✕</button>
+    <button id="btnShowDone" onclick="toggleDone()" style="flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;color:var(--text-m);white-space:nowrap">👁 เสร็จแล้ว</button>
   </div>
   <main id="main"></main>
+  <div id="done-zone" style="display:none;margin:0 12px 20px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-weight:700;font-size:13px;color:#68d391">✅ ออเดอร์ที่เสร็จแล้ว</span>
+        <span id="doneZoneBadge" style="background:#c6f6d5;color:#276749;border-radius:99px;font-size:10px;font-family:var(--mono);padding:1px 8px;font-weight:700">0</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;opacity:.5">🔍</span>
+          <input type="text" id="doneSearchInput" placeholder="ค้นหา..." oninput="renderDoneZone()" autocomplete="off"
+            style="border:1px solid var(--border);border-radius:8px;padding:5px 9px;font-size:12px;font-family:var(--sans);outline:none;background:var(--bg);color:var(--text);width:160px"/>
+        </div>
+      </div>
+      <div id="done-zone-list" style="max-height:420px;overflow-y:auto"></div>
+    </div>
+  </div>
   <div id="done-box">
     <div class="done-inner">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -413,6 +429,10 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
       <div class="slip-addr-text" id="sAddress">—</div>
       <div class="slip-lbl">🗒 รายการสินค้า</div>
       <div class="slip-items-text" id="sItems">—</div>
+      <div style="display:flex;gap:8px;margin-top:6px;font-size:11px">
+        <span id="sCarrier" style="background:#f0f4ff;border:1px solid #c7d4f0;border-radius:99px;padding:2px 10px"></span>
+        <span id="sReview" style="background:#f0f4ff;border:1px solid #c7d4f0;border-radius:99px;padding:2px 10px"></span>
+      </div>
       <div class="slip-check"><div class="slip-box"></div><span>แพ็คครบแล้ว ✓</span><div class="slip-box" style="margin-left:auto"></div><span>ตรวจซ้ำแล้ว</span></div>
     </div>
     <div class="slip-footer no-print">
@@ -449,6 +469,10 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
         <div class="edit-lbl">🛵 เวลาส่งแมส <span style="font-size:10px;font-weight:400;color:var(--text-m)">(กรอกถ้าเป็นแมสเซ็นเจอร์)</span></div>
         <input class="edit-in" type="text" id="editMessTime" placeholder="เช่น 13:00" style="max-width:140px"/>
       </div>
+      <div>
+        <div class="edit-lbl">📬 เลขพัสดุ <span style="font-size:10px;font-weight:400;color:var(--text-m)">col A</span></div>
+        <input class="edit-in" type="text" id="editTracking" placeholder="เช่น TH06XXXXXXXXXX"/>
+      </div>
     </div>
     <div class="edit-status" id="editStatus"><span id="editStatusMsg"></span></div>
     <div class="edit-footer">
@@ -463,14 +487,14 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
 const SHEET_ID   = '14oLUa0F6VlCxQ2LZGsJgV4oGXICylQPC6vO_aq6deiI';
 const API_KEY    = 'AIzaSyCLhgZL3uWKQsVXDNrzsE6EVuIp-dGDe3s';
 const TAB_NAME   = 'data';
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0nWU7ihV_y9FVjnbWLlwWojtcpZisJpTO8c_8rpOAaALUQtT5j8dx2Qf-KXznMf9Y/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxw-L0Xovbf0JB5NoyCYOPwCZvcDD7R6HLR4NfnzrUxqQQ25wm0LR8BLV4uEi7J4LJS/exec';
 const B_CSV      = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRTvOZSL9sX3ezpv8wGlhHB4o50K6dPYPs5L_64JjQSbVPGtutC-YYixoMe_z7yJ8MY2rdmN64MEZTE/pub?output=csv`;
 const COL = { name:1, date:4, carrier:5, orderId:6, level:14, step:7, detail:9, done:15, messTime:18 };
 const STEP_LABELS = {1:'💸 โอนเงิน',2:'📂 โหลดไฟล์',3:'⏳ รอคิว',4:'🖨️ ผลิต',5:'📦 แพ็ก',6:'🚚 จัดส่ง'};
 const STEP_COLORS = {1:'step-s1',2:'step-s2',3:'step-s3',4:'step-s4',5:'step-s5',6:'step-s6'};
 
 // ════════ STATE ════════
-let allOrders = [];
+let allOrders = [], doneOrders = [], showDone = false;
 let currentFilter = 'all';
 const doneQueue = {};
 
@@ -584,8 +608,15 @@ async function loadData(){
       carrier:(r[COL.carrier]||'').trim().toUpperCase(),
       messTime:(r[COL.messTime]||'').trim(),
       done:(r[COL.done]||'').toString().toUpperCase().trim()==='TRUE'
-    })).filter(o=>o.id&&!o.done);
+    }));
+    doneOrders = allOrders.filter(o=>o.id&&o.done);
+    allOrders   = allOrders.filter(o=>o.id&&!o.done);
     renderAll();
+    const dBadge=document.getElementById('doneZoneBadge');
+    if(dBadge) dBadge.textContent=doneOrders.length;
+    const btnDone=document.getElementById('btnShowDone');
+    if(btnDone) btnDone.title=`ออเดอร์เสร็จแล้ว ${doneOrders.length} รายการ`;
+    if(showDone) renderDoneZone();
   }catch(e){
     document.getElementById('main').innerHTML=`<div style="background:var(--red-l);color:var(--red);border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.6;margin:12px"><strong style="display:block;font-size:13px;margin-bottom:4px">ดึงข้อมูลไม่ได้</strong>${e.message}</div>`;
   }finally{icon.classList.remove('spin');}
@@ -611,6 +642,7 @@ function renderAll(){
   if(currentFilter==='today') orders=orders.filter(o=>isToday(o.date));
   else if(currentFilter==='late') orders=orders.filter(o=>isLate(o.date));
   else if(['1','2','3'].includes(currentFilter)) orders=orders.filter(o=>String(getLevel(o))===currentFilter);
+  else if(currentFilter==='mess') orders=orders.filter(o=>o.carrier==='LALAMOVE'||o.carrier==='MESSENGER'||o.carrier==='แมสเซ็นเจอร์');
 
   const z1=orders.filter(o=>isLate(o.date)).sort((a,b)=>a.date-b.date);
   const z2=orders.filter(o=>isToday(o.date)).sort((a,b)=>getLevel(a)-getLevel(b));
@@ -1041,8 +1073,47 @@ function genMsg(){const orderId=document.getElementById('pOrderId').value.trim()
 function copyMsg(){const ta=document.getElementById('msgOut');if(!ta.value)genMsg();const btn=document.getElementById('btnCopyMsg');navigator.clipboard?.writeText(ta.value).then(()=>{btn.textContent='✅ คัดลอกแล้ว';setTimeout(()=>{btn.textContent='📋 คัดลอก';},2000);}).catch(()=>{ta.select();document.execCommand('copy');btn.textContent='✅ คัดลอกแล้ว';setTimeout(()=>{btn.textContent='📋 คัดลอก';},2000);});}
 function lockPT(el){let v=el.value;if(!v.startsWith('PT-'))v='PT-';v='PT-'+v.slice(3).replace(/[^0-9]/g,'').slice(0,5);el.value=v;}
 async function loadNextPT(){try{const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!G2:G?key=${API_KEY}`;const res=await fetch(url);const json=await res.json();const rows=json.values||[];let max=0;for(const row of rows){const m=(row[0]||'').trim().match(/^PT-(\d+)$/);if(m)max=Math.max(max,parseInt(m[1]));}document.getElementById('pOrderId').value='PT-'+String(max+1).padStart(5,'0');}catch(e){document.getElementById('pOrderId').value='PT-';}}
-function openSlip(){document.getElementById('sOrderId').textContent=document.getElementById('pOrderId').value.trim()||'—';document.getElementById('sRound').textContent='รอบ: '+(document.getElementById('pShipDate').value.trim()||'—');document.getElementById('sAddress').textContent=document.getElementById('pAddress').value.trim()||'—';document.getElementById('sItems').textContent=document.getElementById('pItems').value.trim()||'—';document.getElementById('slipModal').classList.add('open');}
+function openSlip(){
+  document.getElementById('sOrderId').textContent=document.getElementById('pOrderId').value.trim()||'—';
+  document.getElementById('sRound').textContent='รอบ: '+(document.getElementById('pShipDate').value.trim()||'—');
+  document.getElementById('sAddress').textContent=document.getElementById('pAddress').value.trim()||'—';
+  document.getElementById('sItems').textContent=document.getElementById('pItems').value.trim()||'—';
+  const cv=document.getElementById('pCarrier').value;
+  document.getElementById('sCarrier').textContent=cv==='LALAMOVE'?'🛵 แมสเซ็นเจอร์':cv==='FLASH'?'⚡ Flash':'🚚 SPX';
+  const rv=document.getElementById('pAllowReview').value;
+  document.getElementById('sReview').textContent=rv==='TRUE'?'📸 อนุญาตรีวิว':'🚫 ไม่อนุญาตรีวิว';
+  document.getElementById('slipModal').classList.add('open');
+}
 function closeSlip(){document.getElementById('slipModal').classList.remove('open');}
+
+function toggleDone(){
+  showDone=!showDone;
+  const dz=document.getElementById('done-zone');
+  const btn=document.getElementById('btnShowDone');
+  dz.style.display=showDone?'block':'none';
+  btn.style.background=showDone?'#c6f6d5':'var(--surface)';
+  btn.style.color=showDone?'#276749':'var(--text-m)';
+  btn.style.borderColor=showDone?'#9ae6b4':'var(--border)';
+  btn.textContent=`👁 เสร็จแล้ว (${doneOrders.length})`;
+  if(showDone) renderDoneZone();
+}
+
+function renderDoneZone(){
+  const q=(document.getElementById('doneSearchInput').value||'').toLowerCase().trim();
+  const list=doneOrders.filter(o=>!q||o.id.toLowerCase().includes(q)||o.name.toLowerCase().includes(q));
+  document.getElementById('doneZoneBadge').textContent=doneOrders.length;
+  const el=document.getElementById('done-zone-list');
+  if(!list.length){
+    el.innerHTML=`<div style="padding:16px;text-align:center;font-size:11px;color:var(--text-m)">${q?'ไม่พบออเดอร์ที่ตรงกัน':'ยังไม่มีออเดอร์ที่เสร็จแล้ว'}</div>`;
+    return;
+  }
+  el.innerHTML=list.map(o=>`
+    <div style="display:grid;grid-template-columns:120px 1fr 90px;gap:8px;padding:7px 14px;border-bottom:1px solid var(--border);align-items:center;opacity:.7">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text-m)">${o.id}</span>
+      <span style="font-size:12px;font-weight:500">${o.name}${o.carrier==='LALAMOVE'||o.carrier==='MESSENGER'?' <span style="font-size:9px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:99px;padding:1px 5px">🛵</span>':''}</span>
+      <span style="font-size:10px;color:var(--text-m);text-align:right">${fmtDate(o.date)||'—'}</span>
+    </div>`).join('');
+}
 
 async function openSlipFromRow(orderId, name, shipDate){
   // เปิด modal พร้อมข้อมูลพื้นฐานก่อน
@@ -1050,6 +1121,8 @@ async function openSlipFromRow(orderId, name, shipDate){
   document.getElementById('sRound').textContent = 'รอบ: ' + (shipDate || '—');
   document.getElementById('sAddress').textContent = '⏳ กำลังดึงข้อมูล...';
   document.getElementById('sItems').textContent = '⏳ กำลังดึงข้อมูล...';
+  document.getElementById('sCarrier').textContent = '';
+  document.getElementById('sReview').textContent = '';
   document.getElementById('slipModal').classList.add('open');
   // ดึงข้อมูลเพิ่มเติมจาก Sheet
   try {
@@ -1059,6 +1132,10 @@ async function openSlipFromRow(orderId, name, shipDate){
       document.getElementById('sRound').textContent = 'รอบ: ' + (json.shipDate || shipDate || '—');
       document.getElementById('sAddress').textContent = json.address || name || '—';
       document.getElementById('sItems').textContent = json.items || '—';
+      const cv2 = (json.carrier||'SPX').toUpperCase();
+      document.getElementById('sCarrier').textContent = cv2==='LALAMOVE'?'🛵 แมสเซ็นเจอร์':cv2==='FLASH'?'⚡ Flash':'🚚 SPX';
+      const rv2 = json.allowReview||'';
+      document.getElementById('sReview').textContent = rv2==='TRUE'?'📸 อนุญาตรีวิว':rv2==='FALSE'?'🚫 ไม่อนุญาตรีวิว':'';
     } else {
       document.getElementById('sAddress').textContent = name || '—';
       document.getElementById('sItems').textContent = '(ไม่พบข้อมูลใน Sheet)';
@@ -1097,11 +1174,13 @@ async function openEdit(orderId){
       document.getElementById('editShipDate').value = sd;
       document.getElementById('editItems').value = json.items || '';
       document.getElementById('editMessTime').value = json.messTime || '';
+      document.getElementById('editTracking').value = json.tracking || '';
     } else {
       showEditStatus('err', 'ไม่พบข้อมูลออเดอร์นี้ใน Sheet');
       document.getElementById('editAddress').value = '';
       document.getElementById('editItems').value = '';
       document.getElementById('editMessTime').value = '';
+      document.getElementById('editTracking').value = '';
     }
   } catch(e) {
     showEditStatus('err', 'ดึงข้อมูลไม่ได้: ' + e.message);
@@ -1118,16 +1197,17 @@ async function saveEdit(){
   const shipDate = document.getElementById('editShipDate').value.trim();
   const items = document.getElementById('editItems').value.trim();
   const messTime = document.getElementById('editMessTime').value.trim();
+  const tracking = document.getElementById('editTracking').value.trim();
   showEditStatus('load', 'กำลังบันทึก...');
   document.getElementById('editSaveBtn').disabled = true;
   try {
-    const params = new URLSearchParams({action:'updateOrder', orderId:editCurrentId, address, shipDate, items, messTime});
+    const params = new URLSearchParams({action:'updateOrder', orderId:editCurrentId, address, shipDate, items, messTime, tracking});
     const res = await fetch(SCRIPT_URL + '?' + params.toString(), {redirect:'follow'});
     const json = await res.json();
     if(json.ok){
       showEditStatus('ok', '✨ บันทึกสำเร็จแล้วค่ะ!');
       const o = allOrders.find(x => x.id === editCurrentId);
-      if(o){ if(shipDate) o.date = parseDate(shipDate); o.messTime = messTime; renderAll(); }
+      if(o){ if(shipDate) o.date = parseDate(shipDate); o.messTime = messTime; if(tracking) o.tracking = tracking; renderAll(); }
       setTimeout(closeEdit, 1200);
     } else {
       showEditStatus('err', json.msg || 'บันทึกไม่สำเร็จ');
