@@ -377,7 +377,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
     </div>
     <div class="t-card">
       <div class="t-title"><span>③</span> Push เข้า Sheet</div>
-      <div class="t-api">https://script.google.com/macros/s/AKfycbw-4cyEODmJro6hXvihpKajdTeAJzHCo129LEEz4WWPQrlVnNWZCHrIsawlpNkYFgVN/exec</div>
+      <div class="t-api">https://script.google.com/macros/s/AKfycbz0nWU7ihV_y9FVjnbWLlwWojtcpZisJpTO8c_8rpOAaALUQtT5j8dx2Qf-KXznMf9Y/exec</div>
       <div style="display:flex;gap:8px">
         <button class="tb tb-push" onclick="pushOrder()" id="btnPush" style="flex:1">🚀 Push เข้า Sheet</button>
         <button class="tb tb-print" onclick="openSlip()" style="flex-shrink:0">🖨️ ใบรายการ</button>
@@ -1057,12 +1057,8 @@ async function pushOrder(){
   if(!name){showPStatus('err','กรุณากรอกชื่อผู้รับก่อนค่ะ');return;}
   showPStatus('load','กำลัง push เข้า Sheet...');document.getElementById('btnPush').disabled=true;
   const params=new URLSearchParams({action:'addOrder',orderId,name,phone:document.getElementById('pPhone').value.trim(),province:document.getElementById('pProvince').value.trim(),shipDate:document.getElementById('pShipDate').value.trim(),carrier:document.getElementById('pCarrier').value,allowReview:document.getElementById('pAllowReview').value,address:document.getElementById('pAddress').value.trim(),items:document.getElementById('pItems').value.trim()});
-  try{
-    const res=await fetch(SCRIPT_URL+'?'+params.toString(),{redirect:'follow'});
-    const json=await res.json();
-    if(json.ok){showPStatus('ok','✅ Push สำเร็จค่ะ! '+json.msg);}
-    else{showPStatus('err','⚠️ '+json.msg);}
-  }catch(e){showPStatus('err','⚠️ เชื่อมต่อไม่ได้: '+e.message);}
+  try{await new Promise(resolve=>{const img=new Image();img.onload=img.onerror=()=>resolve();img.src=SCRIPT_URL+'?'+params.toString();setTimeout(resolve,2500);});showPStatus('ok','Push สำเร็จค่ะ! ✨');}
+  catch(e){showPStatus('err','ไม่สามารถเชื่อมต่อได้: '+e.message);}
   finally{document.getElementById('btnPush').disabled=false;}
 }
 function showPStatus(type,msg){const bar=document.getElementById('pStatus'),dot=document.getElementById('pDot');bar.className='t-st show t-st-'+(type==='ok'?'ok':type==='err'?'err':'load');dot.className='t-dot t-dot-'+(type==='ok'?'ok':type==='err'?'err':'load');document.getElementById('pMsg').textContent=msg;}
@@ -1076,7 +1072,7 @@ function shortDate(v){
 function genMsg(){const orderId=document.getElementById('pOrderId').value.trim()||'PT-XXXXX',shipDate=shortDate(document.getElementById('pShipDate').value.trim());const carrierVal=document.getElementById('pCarrier').value;const carrierTxt=carrierVal==='LALAMOVE'?'🛵 แมสเซ็นเจอร์':carrierVal==='FLASH'?'⚡ Flash':'🚚 SPX';const reviewVal=document.getElementById('pAllowReview').value;const reviewTxt=reviewVal==='TRUE'?'✅ อนุญาตนำรูปไปรีวิว':'❌ ไม่อนุญาตนำรูปไปรีวิว';document.getElementById('msgOut').value=`ขอบคุณมากๆเลยน้าค้าที่อุดหนุน 🥰\n\n✅ รับออเดอร์เรียบร้อยแล้วค่ะ\nตรวจสอบไฟล์และยอดชำระครบแล้วน้า ตอนนี้งานเข้าสู่คิวผลิตเรียบร้อยค่ะ 🎉\n\n🔖 รหัสออเดอร์ : ${orderId}\n📦 รอบจัดส่ง : ${shipDate}\n${carrierTxt}\n${reviewTxt}\n🔔 แจ้งเลขพัสดุช่วง 22:00 น. เป็นต้นไป\n\n📲 ติดตามสถานะงานได้ที่\nhttps://photolovertamsung.github.io/polaroid-tracking/index.html\n\n⏳ ข้อมูลจะอัปเดตหลังโอนประมาณ 24 ชั่วโมงน้า\nหากมีคำถามทักหาบลูได้ตลอดนะคะ 💙`;}
 function copyMsg(){const ta=document.getElementById('msgOut');if(!ta.value)genMsg();const btn=document.getElementById('btnCopyMsg');navigator.clipboard?.writeText(ta.value).then(()=>{btn.textContent='✅ คัดลอกแล้ว';setTimeout(()=>{btn.textContent='📋 คัดลอก';},2000);}).catch(()=>{ta.select();document.execCommand('copy');btn.textContent='✅ คัดลอกแล้ว';setTimeout(()=>{btn.textContent='📋 คัดลอก';},2000);});}
 function lockPT(el){let v=el.value;if(!v.startsWith('PT-'))v='PT-';v='PT-'+v.slice(3).replace(/[^0-9]/g,'').slice(0,5);el.value=v;}
-async function loadNextPT(){try{const res=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&t=${Date.now()}`);const text=await res.text();const json=JSON.parse(text.replace(/^[^(]+\(/,'').replace(/\);\s*$/,''));let max=0;for(const row of json.table.rows){const v=(row.c[6]?.v||'').toString().trim();const m=v.match(/^PT-(\d+)$/);if(m)max=Math.max(max,parseInt(m[1]));}document.getElementById('pOrderId').value='PT-'+String(max+1).padStart(5,'0');}catch(e){document.getElementById('pOrderId').value='PT-';}}
+async function loadNextPT(){try{const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!G2:G?key=${API_KEY}`;const res=await fetch(url);const json=await res.json();const rows=json.values||[];let max=0;for(const row of rows){const m=(row[0]||'').trim().match(/^PT-(\d+)$/);if(m)max=Math.max(max,parseInt(m[1]));}document.getElementById('pOrderId').value='PT-'+String(max+1).padStart(5,'0');}catch(e){document.getElementById('pOrderId').value='PT-';}}
 function openSlip(){
   document.getElementById('sOrderId').textContent=document.getElementById('pOrderId').value.trim()||'—';
   document.getElementById('sRound').textContent='รอบ: '+(document.getElementById('pShipDate').value.trim()||'—');
