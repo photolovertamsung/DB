@@ -1058,8 +1058,10 @@ async function pushOrder(){
   showPStatus('load','กำลัง push เข้า Sheet...');document.getElementById('btnPush').disabled=true;
   const params=new URLSearchParams({action:'addOrder',orderId,name,phone:document.getElementById('pPhone').value.trim(),province:document.getElementById('pProvince').value.trim(),shipDate:document.getElementById('pShipDate').value.trim(),carrier:document.getElementById('pCarrier').value,allowReview:document.getElementById('pAllowReview').value,address:document.getElementById('pAddress').value.trim(),items:document.getElementById('pItems').value.trim()});
   try{
-    await fetch(SCRIPT_URL+'?'+params.toString(),{mode:'no-cors'});
-    showPStatus('ok','✅ Push สำเร็จค่ะ!');
+    const res=await fetch(SCRIPT_URL+'?'+params.toString(),{redirect:'follow'});
+    const json=await res.json();
+    if(json.ok){showPStatus('ok','✅ Push สำเร็จค่ะ! '+json.msg);}
+    else{showPStatus('err','⚠️ '+json.msg);}
   }catch(e){showPStatus('err','⚠️ เชื่อมต่อไม่ได้: '+e.message);}
   finally{document.getElementById('btnPush').disabled=false;}
 }
