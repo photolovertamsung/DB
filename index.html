@@ -377,7 +377,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
     </div>
     <div class="t-card">
       <div class="t-title"><span>③</span> Push เข้า Sheet</div>
-      <div class="t-api">https://script.google.com/macros/s/AKfycbz0nWU7ihV_y9FVjnbWLlwWojtcpZisJpTO8c_8rpOAaALUQtT5j8dx2Qf-KXznMf9Y/exec</div>
+      <div class="t-api">https://script.google.com/macros/s/AKfycbw-4cyEODmJro6hXvihpKajdTeAJzHCo129LEEz4WWPQrlVnNWZCHrIsawlpNkYFgVN/exec</div>
       <div style="display:flex;gap:8px">
         <button class="tb tb-push" onclick="pushOrder()" id="btnPush" style="flex:1">🚀 Push เข้า Sheet</button>
         <button class="tb tb-print" onclick="openSlip()" style="flex-shrink:0">🖨️ ใบรายการ</button>
@@ -487,7 +487,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
 const SHEET_ID   = '14oLUa0F6VlCxQ2LZGsJgV4oGXICylQPC6vO_aq6deiI';
 const API_KEY    = 'AIzaSyCLhgZL3uWKQsVXDNrzsE6EVuIp-dGDe3s';
 const TAB_NAME   = 'data';
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRfLlT_wuWBvKoMnWVXYZi9Fd4-AyCctXeU5gVLnTqM1u5PoPWmdqIjTQvuPm5Ni4m/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-4cyEODmJro6hXvihpKajdTeAJzHCo129LEEz4WWPQrlVnNWZCHrIsawlpNkYFgVN/exec';
 const B_CSV      = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRTvOZSL9sX3ezpv8wGlhHB4o50K6dPYPs5L_64JjQSbVPGtutC-YYixoMe_z7yJ8MY2rdmN64MEZTE/pub?output=csv`;
 const COL = { name:1, date:4, carrier:5, orderId:6, level:14, step:7, detail:9, done:15, messTime:18 };
 const STEP_LABELS = {1:'💸 โอนเงิน',2:'📂 โหลดไฟล์',3:'⏳ รอคิว',4:'🖨️ ผลิต',5:'📦 แพ็ก',6:'🚚 จัดส่ง'};
@@ -1057,8 +1057,19 @@ async function pushOrder(){
   if(!name){showPStatus('err','กรุณากรอกชื่อผู้รับก่อนค่ะ');return;}
   showPStatus('load','กำลัง push เข้า Sheet...');document.getElementById('btnPush').disabled=true;
   const params=new URLSearchParams({action:'addOrder',orderId,name,phone:document.getElementById('pPhone').value.trim(),province:document.getElementById('pProvince').value.trim(),shipDate:document.getElementById('pShipDate').value.trim(),carrier:document.getElementById('pCarrier').value,allowReview:document.getElementById('pAllowReview').value,address:document.getElementById('pAddress').value.trim(),items:document.getElementById('pItems').value.trim()});
-  try{await new Promise(resolve=>{const img=new Image();img.onload=img.onerror=()=>resolve();img.src=SCRIPT_URL+'?'+params.toString();setTimeout(resolve,2500);});showPStatus('ok','Push สำเร็จค่ะ! ✨');}
-  catch(e){showPStatus('err','ไม่สามารถเชื่อมต่อได้: '+e.message);}
+  try{
+    // Apps Script ไม่รองรับ CORS → ใช้ no-cors แล้ว verify ว่าข้อมูลขึ้น Sheet จริง
+    await fetch(SCRIPT_URL+'?'+params.toString(),{mode:'no-cors'});
+    // รอ 2.5 วิ แล้วตรวจสอบว่า orderId ขึ้น Sheet จริงไหม
+    showPStatus('load','กำลังตรวจสอบ...');
+    await new Promise(r=>setTimeout(r,2500));
+    const checkRes=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
+    const checkText=await checkRes.text();
+    const checkJson=JSON.parse(checkText.replace(/^[^(]+\(/,'').replace(/\);\s*$/,''));
+    const found=checkJson.table.rows.some(row=>(row.c[6]?.v||'').toString().trim()===orderId);
+    if(found){showPStatus('ok','Push สำเร็จค่ะ! ✨');}
+    else{showPStatus('err','ส่งคำสั่งแล้วแต่ยังไม่พบข้อมูลใน Sheet — ลองรีเฟรชดูอีกทีนะคะ');}
+  }catch(e){showPStatus('err','เชื่อมต่อไม่ได้: '+e.message);}
   finally{document.getElementById('btnPush').disabled=false;}
 }
 function showPStatus(type,msg){const bar=document.getElementById('pStatus'),dot=document.getElementById('pDot');bar.className='t-st show t-st-'+(type==='ok'?'ok':type==='err'?'err':'load');dot.className='t-dot t-dot-'+(type==='ok'?'ok':type==='err'?'err':'load');document.getElementById('pMsg').textContent=msg;}
