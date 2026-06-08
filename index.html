@@ -1058,18 +1058,9 @@ async function pushOrder(){
   showPStatus('load','กำลัง push เข้า Sheet...');document.getElementById('btnPush').disabled=true;
   const params=new URLSearchParams({action:'addOrder',orderId,name,phone:document.getElementById('pPhone').value.trim(),province:document.getElementById('pProvince').value.trim(),shipDate:document.getElementById('pShipDate').value.trim(),carrier:document.getElementById('pCarrier').value,allowReview:document.getElementById('pAllowReview').value,address:document.getElementById('pAddress').value.trim(),items:document.getElementById('pItems').value.trim()});
   try{
-    // Apps Script ไม่รองรับ CORS → ใช้ no-cors แล้ว verify ว่าข้อมูลขึ้น Sheet จริง
     await fetch(SCRIPT_URL+'?'+params.toString(),{mode:'no-cors'});
-    // รอ 2.5 วิ แล้วตรวจสอบว่า orderId ขึ้น Sheet จริงไหม
-    showPStatus('load','กำลังตรวจสอบ...');
-    await new Promise(r=>setTimeout(r,2500));
-    const checkRes=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
-    const checkText=await checkRes.text();
-    const checkJson=JSON.parse(checkText.replace(/^[^(]+\(/,'').replace(/\);\s*$/,''));
-    const found=checkJson.table.rows.some(row=>(row.c[6]?.v||'').toString().trim()===orderId);
-    if(found){showPStatus('ok','Push สำเร็จค่ะ! ✨');}
-    else{showPStatus('err','ส่งคำสั่งแล้วแต่ยังไม่พบข้อมูลใน Sheet — ลองรีเฟรชดูอีกทีนะคะ');}
-  }catch(e){showPStatus('err','เชื่อมต่อไม่ได้: '+e.message);}
+    showPStatus('ok','✅ Push สำเร็จค่ะ!');
+  }catch(e){showPStatus('err','⚠️ เชื่อมต่อไม่ได้: '+e.message);}
   finally{document.getElementById('btnPush').disabled=false;}
 }
 function showPStatus(type,msg){const bar=document.getElementById('pStatus'),dot=document.getElementById('pDot');bar.className='t-st show t-st-'+(type==='ok'?'ok':type==='err'?'err':'load');dot.className='t-dot t-dot-'+(type==='ok'?'ok':type==='err'?'err':'load');document.getElementById('pMsg').textContent=msg;}
