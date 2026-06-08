@@ -1057,8 +1057,13 @@ async function pushOrder(){
   if(!name){showPStatus('err','กรุณากรอกชื่อผู้รับก่อนค่ะ');return;}
   showPStatus('load','กำลัง push เข้า Sheet...');document.getElementById('btnPush').disabled=true;
   const params=new URLSearchParams({action:'addOrder',orderId,name,phone:document.getElementById('pPhone').value.trim(),province:document.getElementById('pProvince').value.trim(),shipDate:document.getElementById('pShipDate').value.trim(),carrier:document.getElementById('pCarrier').value,allowReview:document.getElementById('pAllowReview').value,address:document.getElementById('pAddress').value.trim(),items:document.getElementById('pItems').value.trim()});
-  try{await new Promise(resolve=>{const img=new Image();img.onload=img.onerror=()=>resolve();img.src=SCRIPT_URL+'?'+params.toString();setTimeout(resolve,2500);});showPStatus('ok','Push สำเร็จค่ะ! ✨');}
-  catch(e){showPStatus('err','ไม่สามารถเชื่อมต่อได้: '+e.message);}
+  try{
+    await fetch(SCRIPT_URL, {
+      method:'POST',
+      body: JSON.stringify(Object.fromEntries(params)),
+    });
+    showPStatus('ok','Push สำเร็จค่ะ! ✨');
+  }catch(e){showPStatus('err','เชื่อมต่อไม่ได้: '+e.message);}
   finally{document.getElementById('btnPush').disabled=false;}
 }
 function showPStatus(type,msg){const bar=document.getElementById('pStatus'),dot=document.getElementById('pDot');bar.className='t-st show t-st-'+(type==='ok'?'ok':type==='err'?'err':'load');dot.className='t-dot t-dot-'+(type==='ok'?'ok':type==='err'?'err':'load');document.getElementById('pMsg').textContent=msg;}
