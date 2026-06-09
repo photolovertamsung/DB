@@ -707,6 +707,27 @@ function zoneByDayHTML(orders){
   }).join('');
 }
 
+function parsePhotoCounts(detail){
+  // นับรูปอัดแต่ละขนาดจาก items text
+  const text = (detail||'').replace(/\\n/g,' ');
+  const result = {};
+  // regex จับ เช่น "2x3 นิ้ว ... x60" หรือ "4x6 นิ้ว ... x20"
+  const sizeRe = /(\d+(?:\.\d+)?)[x×](\d+(?:\.\d+)?)\s*(?:นิ้ว|cm|"|inch)?[^•\n]*?[x×]\s*(\d+)/gi;
+  let m;
+  while((m=sizeRe.exec(text))!==null){
+    // กรองเฉพาะ "งานพิมพ์รูป" / "รูปอัด" / "รูปติดบัตร" context
+    // ตรวจว่า match นี้อยู่ใน context รูป ไม่ใช่สตก.
+    const before = text.slice(Math.max(0,m.index-80), m.index);
+    if(/die-cut|สต๊กเกอร์|sticker|เคลือบ/i.test(before)) continue;
+    const w=parseFloat(m[1]), h=parseFloat(m[2]), qty=parseInt(m[3]);
+    if(isNaN(w)||isNaN(h)||isNaN(qty)||qty<=0) continue;
+    // ปัดให้เป็น string key เรียบร้อย เช่น "2x3", "4x6"
+    const key = w+'x'+h;
+    result[key] = (result[key]||0) + qty;
+  }
+  return result;
+}
+
 function zoneSummaryHTML(zid,orders){
   const types=[
     {key:'stk',emoji:'🏷️',label:'สตก. Die-cut',re:/die-cut|สต๊กเกอร์|sticker/i},
@@ -718,19 +739,45 @@ function zoneSummaryHTML(zid,orders){
   ];
   const cnt={};types.forEach(t=>cnt[t.key]=0);
   let otherCnt=0;
+
+  // รวมจำนวนรูปอัดแยกขนาด
+  const photoBySizeTotal = {};
+
   orders.forEach(o=>{
     const d=o.detail||'';let matched=false;
     types.forEach(t=>{if(t.re.test(d)){cnt[t.key]++;matched=true;}});
     if(!matched&&d) otherCnt++;
+
+    // parse จำนวนรูปอัดแต่ละขนาด
+    const sizes = parsePhotoCounts(d);
+    Object.entries(sizes).forEach(([k,v])=>{
+      photoBySizeTotal[k] = (photoBySizeTotal[k]||0) + v;
+    });
   });
+
   const messCnt=orders.filter(o=>o.carrier==='LALAMOVE'||o.carrier==='MESSENGER'||o.carrier==='แมสเซ็นเจอร์').length;
   const spxCnt=orders.length-messCnt;
   let typeRows=types.filter(t=>cnt[t.key]>0).map(t=>`<div class="zsm-row"><span>${t.emoji} ${t.label}</span><span class="zsm-val">${cnt[t.key]}</span></div>`).join('');
   if(otherCnt>0) typeRows+=`<div class="zsm-row"><span>📦 อื่นๆ</span><span class="zsm-val">${otherCnt}</span></div>`;
+
+  // สร้าง photo size rows — เรียงตามขนาด
+  const photoSizes = Object.entries(photoBySizeTotal)
+    .sort((a,b)=>{
+      const [aw,ah]=a[0].split('x').map(Number);
+      const [bw,bh]=b[0].split('x').map(Number);
+      return (aw*ah)-(bw*bh);
+    });
+  const photoRows = photoSizes.length > 0
+    ? `<hr class="zsm-divider">
+       <div style="font-size:10px;color:var(--text-m);padding:2px 0 4px;letter-spacing:.04em;font-family:var(--mono);text-transform:uppercase">📸 รูปอัดแยกขนาด</div>
+       ${photoSizes.map(([sz,qty])=>`<div class="zsm-row"><span style="font-family:var(--mono);font-size:11px">${sz} นิ้ว</span><span class="zsm-val" style="background:var(--blue-l);color:var(--blue);border-color:rgba(24,95,165,.25)">${qty} ใบ</span></div>`).join('')}`
+    : '';
+
   return `<div class="zone-summary" id="zsm-${zid}">
     <div class="zsm-row zsm-total"><span>📦 ออเดอร์ทั้งหมด</span><span class="zsm-val" style="background:var(--pink-l);color:var(--pink);border-color:rgba(212,83,126,.3)">${orders.length}</span></div>
     <hr class="zsm-divider">
     ${typeRows}
+    ${photoRows}
     <hr class="zsm-divider">
     ${spxCnt>0?`<div class="zsm-row"><span>🚚 SPX / ขนส่ง</span><span class="zsm-val">${spxCnt}</span></div>`:''}
     ${messCnt>0?`<div class="zsm-row"><span>🛵 แมสเซ็นเจอร์</span><span class="zsm-val">${messCnt}</span></div>`:''}
