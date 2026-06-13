@@ -182,6 +182,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
 .slip-box{width:13px;height:13px;border:2px solid #000;border-radius:2px;flex-shrink:0;display:inline-block}
 .slip-footer{border-top:1px solid #eee;padding:10px 14px;display:flex;gap:8px;justify-content:flex-end;background:#f8f8f6}
 .slip-btn-print{background:#111;color:#fff;border:none;border-radius:7px;padding:9px 20px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer}
+.slip-btn-print:disabled{background:#888;cursor:not-allowed}
 .slip-btn-cancel{background:transparent;color:#888;border:1px solid #e0e0dc;border-radius:7px;padding:9px 14px;font-family:var(--sans);font-size:13px;cursor:pointer}
 /* edit modal */
 #editModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;align-items:center;justify-content:center;padding:16px}
@@ -205,7 +206,39 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
 .edit-st-ok{background:var(--green-l);border:1px solid rgba(15,110,86,.2);color:var(--green)}
 .edit-st-err{background:var(--red-l);border:1px solid rgba(163,45,45,.2);color:var(--red)}
 .edit-st-load{background:var(--pink-l);border:1px solid rgba(212,83,126,.2);color:var(--pink)}
-@keyframes spin{to{transform:rotate(360deg)}}.spin{display:inline-block;animation:spin 1s linear infinite}
+/* inline bulk bar */
+.zone-bulk-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--blue-l);border-bottom:1px solid rgba(24,95,165,.15);flex-wrap:wrap}
+.zone-bulk-bar-label{font-size:10px;font-weight:600;color:var(--blue);letter-spacing:.04em;white-space:nowrap}
+.zone-bulk-bar select{font-size:12px;font-family:var(--sans);border:1.5px solid rgba(24,95,165,.3);border-radius:7px;padding:4px 8px;background:#fff;color:var(--text);outline:none;cursor:pointer}
+.zone-bulk-bar select:focus{border-color:var(--blue)}
+.zone-bulk-bar-btn{font-size:11px;font-family:var(--sans);font-weight:700;background:var(--blue);color:#fff;border:none;border-radius:7px;padding:5px 14px;cursor:pointer;white-space:nowrap;transition:background .15s}
+.zone-bulk-bar-btn:hover{background:#1251a0}
+.zone-bulk-bar-btn:disabled{background:#a0aec0;cursor:not-allowed}
+.zone-bulk-bar-status{font-size:11px;color:var(--blue);font-weight:500}
+/* bulk step modal */
+#bulkModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;align-items:center;justify-content:center;padding:16px}
+#bulkModal.open{display:flex}
+.bulk-wrap{background:var(--surface);border-radius:14px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden}
+.bulk-topbar{background:var(--blue);color:#fff;padding:11px 16px;display:flex;align-items:center;justify-content:space-between}
+.bulk-topbar-title{font-size:13px;font-weight:700}
+.bulk-close{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;font-family:var(--sans);font-weight:600}
+.bulk-body{padding:14px 16px}
+.bulk-lbl{font-size:10px;font-weight:600;color:var(--text-m);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
+.bulk-sel{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 11px;outline:none}
+.bulk-sel:focus{border-color:var(--blue)}
+.bulk-info{font-size:11px;color:var(--text-m);margin-top:8px;line-height:1.6}
+.bulk-footer{border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:8px;justify-content:flex-end;background:var(--bg)}
+.bulk-btn-ok{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 22px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer}
+.bulk-btn-ok:disabled{background:var(--border);color:var(--text-m);cursor:not-allowed}
+.bulk-btn-cancel{background:transparent;color:var(--text-m);border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-family:var(--sans);font-size:13px;cursor:pointer}
+.bulk-status{display:none;align-items:center;gap:8px;padding:8px 11px;border-radius:8px;font-size:12px;margin:0 0 10px}
+.bulk-status.show{display:flex}
+.bulk-st-ok{background:var(--green-l);border:1px solid rgba(15,110,86,.2);color:var(--green)}
+.bulk-st-err{background:var(--red-l);border:1px solid rgba(163,45,45,.2);color:var(--red)}
+.bulk-st-load{background:var(--blue-l);border:1px solid rgba(24,95,165,.2);color:var(--blue)}
+/* bulk button in zone */
+.zone-bulk-btn{margin-left:6px;font-size:10px;background:var(--blue-l);color:var(--blue);border:1px solid rgba(24,95,165,.2);border-radius:6px;padding:2px 8px;cursor:pointer;font-family:var(--sans);font-weight:600;flex-shrink:0;transition:all .15s}
+.zone-bulk-btn:hover{background:var(--blue);color:#fff}
 @media print{
   @page{size:100mm 150mm;margin:0}
   body>*{display:none!important}
@@ -429,15 +462,15 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
       <div class="slip-addr-text" id="sAddress">—</div>
       <div class="slip-lbl">🗒 รายการสินค้า</div>
       <div class="slip-items-text" id="sItems">—</div>
-      <div style="display:flex;gap:8px;margin-top:6px;font-size:11px">
+      <div style="display:flex;gap:8px;margin-top:6px;font-size:11px;flex-wrap:wrap">
         <span id="sCarrier" style="background:#f0f4ff;border:1px solid #c7d4f0;border-radius:99px;padding:2px 10px"></span>
-        <span id="sReview" style="background:#f0f4ff;border:1px solid #c7d4f0;border-radius:99px;padding:2px 10px"></span>
+        <span id="sReview" style="border-radius:99px;padding:2px 10px;font-weight:700"></span>
       </div>
       <div class="slip-check"><div class="slip-box"></div><span>แพ็คครบแล้ว ✓</span><div class="slip-box" style="margin-left:auto"></div><span>ตรวจซ้ำแล้ว</span></div>
     </div>
     <div class="slip-footer no-print">
       <button class="slip-btn-cancel" onclick="closeSlip()">ยกเลิก</button>
-      <button class="slip-btn-print" onclick="window.print()">🖨️ พิมพ์</button>
+      <button class="slip-btn-print" id="slipPrintBtn" onclick="window.print()">🖨️ พิมพ์</button>
     </div>
   </div>
 </div>
@@ -482,6 +515,35 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
   </div>
 </div>
 
+<!-- BULK STEP MODAL -->
+<div id="bulkModal">
+  <div class="bulk-wrap">
+    <div class="bulk-topbar">
+      <div class="bulk-topbar-title">⚡ เปลี่ยนสเตตัสทั้งหมด</div>
+      <button class="bulk-close" onclick="closeBulk()">✕ ปิด</button>
+    </div>
+    <div class="bulk-body">
+      <div class="bulk-lbl">กลุ่มออเดอร์</div>
+      <div id="bulkZoneLabel" style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--blue)">—</div>
+      <div class="bulk-lbl">เปลี่ยนเป็นขั้นตอน</div>
+      <select class="bulk-sel" id="bulkStepSel">
+        <option value="1">💸 โอนเงิน</option>
+        <option value="2">📂 โหลดไฟล์</option>
+        <option value="3">⏳ รอคิว</option>
+        <option value="4">🖨️ ผลิต</option>
+        <option value="5">📦 แพ็ก</option>
+        <option value="6">🚚 จัดส่ง</option>
+      </select>
+      <div class="bulk-info" id="bulkInfo">—</div>
+      <div class="bulk-status" id="bulkStatus"><span id="bulkStatusMsg"></span></div>
+    </div>
+    <div class="bulk-footer">
+      <button class="bulk-btn-cancel" onclick="closeBulk()">ยกเลิก</button>
+      <button class="bulk-btn-ok" id="bulkOkBtn" onclick="doBulkStep()">✅ เปลี่ยนทั้งหมด</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ════════ CONFIG ════════
 const SHEET_ID   = '14oLUa0F6VlCxQ2LZGsJgV4oGXICylQPC6vO_aq6deiI';
@@ -489,7 +551,7 @@ const API_KEY    = 'AIzaSyCLhgZL3uWKQsVXDNrzsE6EVuIp-dGDe3s';
 const TAB_NAME   = 'data';
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-4cyEODmJro6hXvihpKajdTeAJzHCo129LEEz4WWPQrlVnNWZCHrIsawlpNkYFgVN/exec';
 const B_CSV      = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRTvOZSL9sX3ezpv8wGlhHB4o50K6dPYPs5L_64JjQSbVPGtutC-YYixoMe_z7yJ8MY2rdmN64MEZTE/pub?output=csv`;
-const COL = { name:1, date:4, carrier:5, orderId:6, level:14, step:7, detail:9, done:15, messTime:18 };
+const COL = { name:1, date:4, carrier:5, orderId:6, level:14, step:7, detail:9, done:15, messTime:18, allowReview:16 };
 const STEP_LABELS = {1:'💸 โอนเงิน',2:'📂 โหลดไฟล์',3:'⏳ รอคิว',4:'🖨️ ผลิต',5:'📦 แพ็ก',6:'🚚 จัดส่ง'};
 const STEP_COLORS = {1:'step-s1',2:'step-s2',3:'step-s3',4:'step-s4',5:'step-s5',6:'step-s6'};
 
@@ -607,6 +669,7 @@ async function loadData(){
       detail:(r[COL.detail]||'').trim(),
       carrier:(r[COL.carrier]||'').trim().toUpperCase(),
       messTime:(r[COL.messTime]||'').trim(),
+      allowReview:(r[COL.allowReview]||'').toString().toUpperCase().trim(),
       done:(r[COL.done]||'').toString().toUpperCase().trim()==='TRUE'
     }));
     doneOrders = allOrders.filter(o=>o.id&&o.done);
@@ -685,6 +748,8 @@ function zoneByDayHTML(orders){
     const zid = 'z3d'+i;
     const dc = val.date ? dateClass(val.date) : '';
     const dateColor = dc==='date-today'?'var(--pink)':dc==='date-late'?'var(--red)':'var(--green)';
+    const safeKey = key.replace(/'/g,"\\'");
+    const safeOrders = JSON.stringify(val.orders.map(o=>({id:o.id}))).replace(/</g,'\\u003c');
     return `<div class="zone zone-z3" style="margin-bottom:6px">
       <div class="zone-header" onclick="toggleZoneSummary('${zid}')">
         <div class="zone-stripe" style="background:${dateColor}"></div>
@@ -693,6 +758,7 @@ function zoneByDayHTML(orders){
         <span class="zone-toggle" id="ztg-${zid}">▼</span>
       </div>
       ${zoneSummaryHTML(zid, val.orders)}
+      ${zoneBulkBar(zid, val.orders)}
       <div class="col-head">
         <span>รหัส</span><span>ชื่อลูกค้า</span><span>ระดับ</span>
         <span style="text-align:right">วันนัดส่ง</span>
@@ -790,6 +856,18 @@ function toggleZoneSummary(zid){
   sm.classList.toggle('open');
   if(tg)tg.classList.toggle('open');
 }
+const _bulkRegistry = {};
+function zoneBulkBar(zid, orders){
+  const stepOpts = Object.entries(STEP_LABELS).map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  _bulkRegistry[zid] = orders.map(o=>o.id);
+  return `<div class="zone-bulk-bar no-print">
+    <span class="zone-bulk-bar-label">⚡ เปลี่ยนทั้งหมด</span>
+    <select id="bulkSel-${zid}">${stepOpts}</select>
+    <button class="zone-bulk-bar-btn" id="bulkBtn-${zid}" onclick="doBulkInline('${zid}')">เปลี่ยน ${orders.length} ออเดอร์</button>
+    <span class="zone-bulk-bar-status" id="bulkSt-${zid}"></span>
+  </div>`;
+}
+
 function zoneHTML(id,title,orders){
   if(!orders.length) return '';
   return `<div class="zone zone-${id}">
@@ -800,6 +878,7 @@ function zoneHTML(id,title,orders){
       <span class="zone-toggle" id="ztg-${id}">▼</span>
     </div>
     ${zoneSummaryHTML(id,orders)}
+    ${zoneBulkBar(id,orders)}
     <div class="col-head">
       <span>รหัส</span><span>ชื่อลูกค้า</span><span>ระดับ</span>
       <span style="text-align:right">วันนัดส่ง</span>
@@ -1133,7 +1212,9 @@ function openSlip(){
   const cv=document.getElementById('pCarrier').value;
   document.getElementById('sCarrier').textContent=cv==='LALAMOVE'?'🛵 แมสเซ็นเจอร์':cv==='FLASH'?'⚡ Flash':'🚚 SPX';
   const rv=document.getElementById('pAllowReview').value;
-  document.getElementById('sReview').textContent=rv==='TRUE'?'📸 อนุญาตรีวิว':'🚫 ไม่อนุญาตรีวิว';
+  const sRevEl = document.getElementById('sReview');
+  if(rv==='TRUE'){sRevEl.textContent='📸 อนุญาตรีวิว';sRevEl.style.cssText='background:#dcfce7;border:2px solid #16a34a;border-radius:99px;padding:2px 10px;font-weight:700;color:#15803d';}
+  else{sRevEl.textContent='🚫 ไม่อนุญาตรีวิว';sRevEl.style.cssText='background:#fee2e2;border:2px solid #dc2626;border-radius:99px;padding:2px 10px;font-weight:700;color:#b91c1c';}
   document.getElementById('slipModal').classList.add('open');
 }
 function closeSlip(){document.getElementById('slipModal').classList.remove('open');}
@@ -1168,15 +1249,38 @@ function renderDoneZone(){
 }
 
 async function openSlipFromRow(orderId, name, shipDate){
-  // เปิด modal พร้อมข้อมูลพื้นฐานก่อน
+  // ดึง local order data ก่อน
+  const localOrder = allOrders.find(o=>o.id===orderId) || doneOrders.find(o=>o.id===orderId);
+
+  // เปิด modal พร้อมข้อมูลพื้นฐาน
   document.getElementById('sOrderId').textContent = orderId || '—';
   document.getElementById('sRound').textContent = 'รอบ: ' + (shipDate || '—');
   document.getElementById('sAddress').textContent = '⏳ กำลังดึงข้อมูล...';
   document.getElementById('sItems').textContent = '⏳ กำลังดึงข้อมูล...';
-  document.getElementById('sCarrier').textContent = '';
-  document.getElementById('sReview').textContent = '';
+
+  // แสดง carrier จาก local ได้เลย
+  const sCarrierEl = document.getElementById('sCarrier');
+  if(localOrder){
+    const lc = localOrder.carrier||'SPX';
+    sCarrierEl.textContent = lc==='LALAMOVE'?'🛵 แมสเซ็นเจอร์':lc==='FLASH'?'⚡ Flash':'🚚 SPX';
+  } else { sCarrierEl.textContent = ''; }
+
+  // แสดง allowReview จาก local ทันทีเลย (ไม่ต้องรอ API)
+  const sRevEl = document.getElementById('sReview');
+  function applyReviewBadge(rv){
+    if(rv==='TRUE'){sRevEl.textContent='📸 อนุญาตรีวิว';sRevEl.style.cssText='background:#dcfce7;border:2px solid #16a34a;border-radius:99px;padding:2px 10px;font-weight:700;color:#15803d';}
+    else if(rv==='FALSE'){sRevEl.textContent='🚫 ไม่อนุญาตรีวิว';sRevEl.style.cssText='background:#fee2e2;border:2px solid #dc2626;border-radius:99px;padding:2px 10px;font-weight:700;color:#b91c1c';}
+    else{sRevEl.textContent='—';sRevEl.style.cssText='background:#f1efe8;border:1px solid var(--border);border-radius:99px;padding:2px 10px;font-size:11px;color:var(--text-m)';}
+  }
+  if(localOrder) applyReviewBadge(localOrder.allowReview||'');
+  else { sRevEl.textContent=''; sRevEl.style.cssText=''; }
+
+  // ล็อคปุ่มพิมพ์จนกว่าจะโหลดเสร็จ
+  const printBtn = document.getElementById('slipPrintBtn');
+  if(printBtn){ printBtn.disabled = true; printBtn.textContent = '⏳ โหลด...'; }
   document.getElementById('slipModal').classList.add('open');
-  // ดึงข้อมูลเพิ่มเติมจาก Sheet
+
+  // ดึงข้อมูลเพิ่มเติม (address, items) จาก Sheet
   try {
     const res = await fetch(SCRIPT_URL + '?action=getOrder&orderId=' + encodeURIComponent(orderId));
     const json = await res.json();
@@ -1184,10 +1288,10 @@ async function openSlipFromRow(orderId, name, shipDate){
       document.getElementById('sRound').textContent = 'รอบ: ' + (json.shipDate || shipDate || '—');
       document.getElementById('sAddress').textContent = json.address || name || '—';
       document.getElementById('sItems').textContent = json.items || '—';
-      const cv2 = (json.carrier||'SPX').toUpperCase();
-      document.getElementById('sCarrier').textContent = cv2==='LALAMOVE'?'🛵 แมสเซ็นเจอร์':cv2==='FLASH'?'⚡ Flash':'🚚 SPX';
-      const rv2 = json.allowReview||'';
-      document.getElementById('sReview').textContent = rv2==='TRUE'?'📸 อนุญาตรีวิว':rv2==='FALSE'?'🚫 ไม่อนุญาตรีวิว':'';
+      const cv2 = (json.carrier||localOrder?.carrier||'SPX').toUpperCase();
+      sCarrierEl.textContent = cv2==='LALAMOVE'?'🛵 แมสเซ็นเจอร์':cv2==='FLASH'?'⚡ Flash':'🚚 SPX';
+      // ถ้า API ส่ง allowReview มาด้วยก็ใช้ค่า API (อาจ updated)
+      if(json.allowReview) applyReviewBadge(json.allowReview);
     } else {
       document.getElementById('sAddress').textContent = name || '—';
       document.getElementById('sItems').textContent = '(ไม่พบข้อมูลใน Sheet)';
@@ -1196,6 +1300,8 @@ async function openSlipFromRow(orderId, name, shipDate){
     document.getElementById('sAddress').textContent = name || '—';
     document.getElementById('sItems').textContent = '(ดึงข้อมูลไม่ได้: ' + e.message + ')';
   }
+  // ปลดล็อคปุ่มพิมพ์
+  if(printBtn){ printBtn.disabled = false; printBtn.textContent = '🖨️ พิมพ์'; }
 }
 
 // ════════ EDIT MODAL ════════
@@ -1297,6 +1403,89 @@ function bRenderAll(){
   let html='';
   groups.forEach(sid=>{const orders=filtered.filter(r=>r.step===sid);if(!orders.length)return;const st=B_STEPS[sid-1];html+=`<div style="font-size:10px;font-weight:600;color:var(--text-m);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px;display:flex;align-items:center;gap:6px">${st.emoji} ${st.label} · ${orders.length} ออเดอร์ <span style="flex:1;height:1px;background:var(--border);display:block"></span></div><div style="display:flex;flex-direction:column;gap:6px">`;orders.forEach(o=>{html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 12px;display:flex;align-items:center;gap:10px"><div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${st.dot}"></div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">${o.name}</div><div style="font-size:11px;color:var(--text-m);margin-top:2px;display:flex;gap:5px;flex-wrap:wrap">${o.orderCode?`<span style="background:var(--bg);padding:1px 6px;border-radius:7px">${o.orderCode}</span>`:''} ${o.phone?`<span style="background:var(--bg);padding:1px 6px;border-radius:7px">${o.phone}</span>`:''} ${o.province?`<span style="background:var(--bg);padding:1px 6px;border-radius:7px">📍${o.province}</span>`:''} ${o.date?`<span style="background:var(--bg);padding:1px 6px;border-radius:7px">รอบ ${o.date}</span>`:''}</div></div><span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;flex-shrink:0;background:${st.cls};color:${st.color}">${st.emoji} ${st.label}</span></div>`;});html+='</div>';});
   document.getElementById('bContent').innerHTML=html;
+}
+
+// ════════ BULK STEP INLINE ════════
+async function doBulkInline(zid){
+  const ids = _bulkRegistry[zid] || [];
+  if(!ids.length) return;
+  const step = parseInt(document.getElementById('bulkSel-'+zid).value);
+  const btn = document.getElementById('bulkBtn-'+zid);
+  const st = document.getElementById('bulkSt-'+zid);
+  btn.disabled = true;
+  st.style.color = 'var(--blue)';
+  st.textContent = `⏳ 0/${ids.length}...`;
+  let ok=0, fail=0;
+  for(const id of ids){
+    try{
+      // ใช้ fetch แบบเดียวกับ updateStep ปกติ
+      await fetch(SCRIPT_URL + '?' + new URLSearchParams({action:'updateStep', orderId:id, step}).toString());
+      // อัป local state
+      const o = allOrders.find(x=>x.id===id); if(o) o.step=step;
+      // อัป dropdown ใน DOM ทันที
+      const rowEl = document.getElementById('row-'+id);
+      if(rowEl){
+        const sel = rowEl.querySelector('.step-sel');
+        if(sel){ sel.value = step; sel.className = `step-sel ${STEP_COLORS[step]||''}`; }
+      }
+      ok++;
+    } catch(e){ fail++; }
+    st.textContent = `⏳ ${ok+fail}/${ids.length}...`;
+  }
+  if(fail===0){
+    st.style.color='var(--green)';
+    st.textContent = `✅ เสร็จ ${ok} ออเดอร์`;
+    showToast(`✅ อัปเดต ${ok} ออเดอร์สำเร็จ`);
+  } else {
+    st.style.color='var(--red)';
+    st.textContent = `⚠️ สำเร็จ ${ok} | ล้มเหลว ${fail}`;
+    btn.disabled = false;
+  }
+}
+
+// ════════ BULK STEP (modal — legacy, kept for compat) ════════
+let bulkTargetOrders = [];
+function openBulk(zoneLabel, orders){
+  bulkTargetOrders = orders.map(o=>o.id);
+  document.getElementById('bulkZoneLabel').textContent = zoneLabel;
+  document.getElementById('bulkInfo').textContent = `จะอัปเดต ${bulkTargetOrders.length} ออเดอร์: ` + bulkTargetOrders.join(', ');
+  document.getElementById('bulkStatus').className = 'bulk-status';
+  document.getElementById('bulkOkBtn').disabled = false;
+  document.getElementById('bulkOkBtn').textContent = '✅ เปลี่ยนทั้งหมด';
+  document.getElementById('bulkModal').classList.add('open');
+}
+function closeBulk(){ document.getElementById('bulkModal').classList.remove('open'); bulkTargetOrders=[]; }
+async function doBulkStep(){
+  const step = parseInt(document.getElementById('bulkStepSel').value);
+  if(!bulkTargetOrders.length) return;
+  const btn = document.getElementById('bulkOkBtn');
+  btn.disabled = true; btn.textContent = '⏳ กำลังอัปเดต...';
+  document.getElementById('bulkStatus').className = 'bulk-status show bulk-st-load';
+  document.getElementById('bulkStatusMsg').textContent = 'กำลังอัปเดต 0/' + bulkTargetOrders.length + '...';
+  let ok=0, fail=0;
+  for(const id of bulkTargetOrders){
+    try{
+      const params = new URLSearchParams({action:'updateStep', orderId:id, step});
+      await new Promise(resolve=>{
+        const img=new Image(); img.onload=img.onerror=()=>resolve();
+        img.src=SCRIPT_URL+'?'+params.toString(); setTimeout(resolve,4000);
+      });
+      // อัป local state
+      const o = allOrders.find(x=>x.id===id); if(o) o.step=step;
+      ok++;
+    } catch(e){ fail++; }
+    document.getElementById('bulkStatusMsg').textContent = `กำลังอัปเดต ${ok+fail}/${bulkTargetOrders.length}...`;
+  }
+  renderAll();
+  if(fail===0){
+    document.getElementById('bulkStatus').className = 'bulk-status show bulk-st-ok';
+    document.getElementById('bulkStatusMsg').textContent = `✅ อัปเดต ${ok} ออเดอร์สำเร็จ`;
+    setTimeout(closeBulk, 1500);
+  } else {
+    document.getElementById('bulkStatus').className = 'bulk-status show bulk-st-err';
+    document.getElementById('bulkStatusMsg').textContent = `สำเร็จ ${ok} | ล้มเหลว ${fail}`;
+    btn.disabled=false; btn.textContent='↩️ ลองอีกครั้ง';
+  }
 }
 
 // ════════ INIT ════════
