@@ -543,7 +543,7 @@ const API_KEY    = 'AIzaSyCLhgZL3uWKQsVXDNrzsE6EVuIp-dGDe3s';
 const TAB_NAME   = 'data';
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-4cyEODmJro6hXvihpKajdTeAJzHCo129LEEz4WWPQrlVnNWZCHrIsawlpNkYFgVN/exec';
 const B_CSV      = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRTvOZSL9sX3ezpv8wGlhHB4o50K6dPYPs5L_64JjQSbVPGtutC-YYixoMe_z7yJ8MY2rdmN64MEZTE/pub?output=csv`;
-const COL = { name:1, date:4, carrier:5, orderId:6, level:14, step:7, detail:9, done:15, messTime:18, allowReview:16 };
+const COL = { tracking:0, name:1, date:4, carrier:5, orderId:6, level:14, step:7, detail:9, done:15, messTime:18, allowReview:16 };
 const STEP_LABELS = {1:'💸 โอนเงิน',2:'📂 โหลดไฟล์',3:'⏳ รอคิว',4:'🖨️ ผลิต',5:'📦 แพ็ก',6:'🚚 จัดส่ง'};
 const STEP_COLORS = {1:'step-s1',2:'step-s2',3:'step-s3',4:'step-s4',5:'step-s5',6:'step-s6'};
 
@@ -655,6 +655,7 @@ async function loadData(){
     allOrders=(json.values||[]).map(r=>({
       id:(r[COL.orderId]||'').trim(),
       name:(r[COL.name]||'').trim(),
+      tracking:(r[COL.tracking]||'').trim(),
       date:parseDate(r[COL.date]),
       level:parseInt(r[COL.level])||1,
       step:parseInt(r[COL.step])||1,
