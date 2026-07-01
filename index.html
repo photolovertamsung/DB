@@ -362,14 +362,6 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
 <div class="page" id="page-parser">
   <div class="tool-wrap">
     <div class="t-card">
-      <div class="t-title"><span>⓪</span> ดึงข้อมูลจาก Sheet</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input class="t-in" type="text" id="fetchId" placeholder="PT-00132" style="flex:1"/>
-        <button class="tb tb-fetch" onclick="fetchOrder()" id="btnFetch" style="flex-shrink:0">🔎 ดึง</button>
-      </div>
-      <div class="t-st" id="fetchStatus"><div class="t-dot" id="fetchDot"></div><span id="fetchMsg"></span></div>
-    </div>
-    <div class="t-card">
       <div class="t-title"><span>①</span> ข้อความออเดอร์ + ที่อยู่</div>
       <textarea class="t-ta" id="rawText" placeholder="Paste ข้อความออเดอร์จาก LINE..."></textarea>
       <div style="margin-top:8px;display:flex;gap:8px">
@@ -1134,7 +1126,11 @@ function parseOrder(){
   const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
   const PRODUCT_RE=/รอบจัดส่ง|━|สรุป|ออเดอร์|Polaroid|📦|🖨️|งานพิมพ์|สต๊ก|Photocard|จัดเซ็ต|Die-cut|STICKER/;
   const normDigits=l=>l.replace(/[-\s]/g,'');
-  const isAddressLine=l=>/\d{5}/.test(l)&&l.length>10; // มีรหัสไปรษณีย์ 5 หลัก
+  const stripPhone=l=>{const m=l.replace(/[-\s]/g,'').match(/0[6-9]\d{8}/);if(!m)return l;const re=new RegExp(m[0].split('').join('[\\-\\s]*'));return l.replace(re,' ');};
+  // บรรทัดที่อยู่ = หลังตัดเบอร์แล้วยังมีรหัสไปรษณีย์ 5 หลัก + ยาวพอ  หรือ  มี marker ที่อยู่ (บ้านเลขที่/เลขที่/เลขที่แบบ 8/91)
+  const hasZip=l=>/(^|[^0-9])\d{5}([^0-9]|$)/.test(stripPhone(l));
+  const hasAddrMarker=l=>/บ้านเลขที่|เลขที่\s*\d|\d+\/\d+|หมู่ที่|หมู่บ้าน|ต\.|อ\.|ซ\.|ถ\.|ตำบล|อำเภอ|แขวง|เขต/.test(l);
+  const isAddressLine=l=>(hasZip(l)&&l.length>10)||hasAddrMarker(l);
   const isPhoneOnlyLine=l=>{const d=normDigits(l);const m=d.match(/0[6-9]\d{8}/);return !!m&&d.replace(m[0],'').length===0;};
   // 1) เบอร์โทร — หาจากทั้งข้อความ ไม่สนตำแหน่งบรรทัด
   const phoneMatch=normDigits(raw).match(/0[6-9]\d{8}/);
@@ -1178,39 +1174,40 @@ function parseOrder(){
   // auto-detect allowReview
   if(/ไม่อนุญาตนำรูปไปรีวิว/i.test(raw)) document.getElementById('pAllowReview').value='FALSE';
   else if(/อนุญาตนำรูปไปรีวิว/i.test(raw)) document.getElementById('pAllowReview').value='TRUE';
-  const addrLine=lines.find(isAddressLine);
-  let addressText=addrLine||'';
-  if(addrLine){
-    // ตัดเบอร์โทรออกจากบรรทัดที่อยู่ก่อน (เผื่อชื่อ/เบอร์/ที่อยู่อยู่บรรทัดเดียวกัน)
-    let lineNoPhone=addrLine;
-    if(phone){
-      const phoneVariantRe=new RegExp(phone.split('').join('[\\-\\s]*'));
-      lineNoPhone=lineNoPhone.replace(phoneVariantRe,' ');
-    }
-    const ADDR_MARKER_RE=/บ้านเลขที่|เลขที่\s*\d/;
-    const markerMatch=lineNoPhone.match(ADDR_MARKER_RE);
-    if(markerMatch){
-      const startIdx=markerMatch.index;
-      const prefix=lineNoPhone.slice(0,startIdx).trim();
-      const afterStart=lineNoPhone.slice(startIdx);
-      const zipTailMatch=afterStart.match(/\d{5}(\s*\([^)]*\))?/);
-      let suffix='';
-      if(zipTailMatch){
-        const endIdx=zipTailMatch.index+zipTailMatch[0].length;
-        addressText=afterStart.slice(0,endIdx).trim();
-        suffix=afterStart.slice(endIdx).trim();
-      }else{
-        addressText=afterStart.trim();
-      }
-      // ถ้ายังไม่มีชื่อ (ไม่มีบรรทัดชื่อแยกต่างหาก) ลองดึงชื่อจากส่วนที่เหลือของบรรทัดที่อยู่นี้
+  // ═══ แยกที่อยู่: classify ทุกบรรทัด แล้วรวมบรรทัดที่อยู่ทั้งหมด ═══
+  let addressText='';
+  {
+    const addrParts=[];
+    lines.forEach(l=>{
+      if(PRODUCT_RE.test(l)) return;
+      if(isPhoneOnlyLine(l)) return;
+      if(nameLine && l===nameLine) return; // บรรทัดชื่อล้วน
+      // บรรทัดนี้เป็นที่อยู่ (มี marker หรือ zip) — ตัดเบอร์และชื่อที่อาจปนออก
+      const isAddr=isAddressLine(l)||/^\d{5}$/.test(l.trim());
+      if(!isAddr) return;
+      let seg=stripPhone(l);
+      // ถ้าชื่ออยู่บรรทัดเดียวกับที่อยู่ (ไม่มีบรรทัดชื่อแยก) ให้ดึงชื่อออกจากส่วนหน้า/หลัง
       if(!nameLine){
-        const extraName=(prefix+' '+suffix).replace(/\s{2,}/g,' ').trim();
-        if(extraName) document.getElementById('pName').value=extraName;
+        const ADDR_START_RE=/บ้านเลขที่|เลขที่\s*\d|\d+\/\d+|\d+\s*หมู่/;
+        const mk=seg.match(ADDR_START_RE);
+        if(mk){
+          const prefix=seg.slice(0,mk.index).trim();
+          const after=seg.slice(mk.index);
+          const zipT=after.match(/\d{5}(\s*\([^)]*\))?/);
+          let core=after, suffix='';
+          if(zipT){const e=zipT.index+zipT[0].length;core=after.slice(0,e).trim();suffix=after.slice(e).trim();}
+          seg=core;
+          const extraName=(prefix+' '+suffix).replace(/\s{2,}/g,' ').trim();
+          if(extraName && !document.getElementById('pName').value) document.getElementById('pName').value=extraName;
+        }
       }
-    }
+      seg=seg.replace(/\s{2,}/g,' ').trim();
+      if(seg) addrParts.push(seg);
+    });
+    addressText=addrParts.join(' ').replace(/\s{2,}/g,' ').trim();
   }
   const name=document.getElementById('pName').value;
-  if(addrLine) document.getElementById('pAddress').value=`${name}\n${addressText}\nT.${phone}`.trim();
+  if(addressText) document.getElementById('pAddress').value=`${name}\n${addressText}\nT.${phone}`.trim();
   // จับรายการสินค้าทุก section: งานพิมพ์รูป, Photocard, Memo Pad, พวงกุญแจ, สต๊กเกอร์ Die-cut, จัดเซ็ต STICKER, จัดเซ็ต Giveaway ฯลฯ
   // strategy: เก็บทุกบรรทัดที่อยู่ระหว่าง section header สินค้า กับบรรทัดสรุปเงิน/━
   const ITEM_SECTION_RE = /^(?:🖼|🃏|📝|🔑|✂️|🏷|🎁|งานพิมพ์รูป|Photocard|Memo\s*Pad|พวงกุญแจ|สต๊กเกอร์|Die-cut|จัดเซ็ต|STICKER|Giveaway)/i;
