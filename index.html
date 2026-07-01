@@ -380,7 +380,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
     <div class="t-card">
       <div class="t-title"><span>②</span> ตรวจสอบและแก้ไข</div>
       <div class="t-r2">
-        <div class="t-f"><div class="t-lbl">รหัสออเดอร์ <span class="t-tag t-tag-m">กรอกเอง</span></div><input class="t-in" type="text" id="pOrderId" placeholder="PT-XXXXX" oninput="lockPT(this)"/></div>
+        <div class="t-f"><div class="t-lbl">รหัสออเดอร์ <span class="t-tag t-tag-m">กรอกเอง</span></div><input class="t-in" type="text" id="pOrderId" placeholder="PT-XXXXX" oninput="lockPT(this)" onblur="checkOrderIdDup()"/><div id="orderIdDupWarn" style="display:none;color:#c53030;font-size:11px;margin-top:4px;font-weight:600">⚠️ รหัสนี้มีออเดอร์อยู่แล้ว!</div></div>
         <div class="t-f"><div class="t-lbl">รอบจัดส่ง <span class="t-tag t-tag-a">auto</span></div><input class="t-in" type="text" id="pShipDate" placeholder="30/05/2026"/></div>
       </div>
       <div class="t-r2">
@@ -903,9 +903,11 @@ function rowHTML(o){
   const isMessenger = o.carrier==='LALAMOVE'||o.carrier==='MESSENGER'||o.carrier==='แมสเซ็นเจอร์';
   const messTimeStr = (o.messTime||'').trim();
   const messBadge = isMessenger ? ' <span style="font-size:9px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:99px;padding:1px 6px;vertical-align:middle">🛵 แมส' + (messTimeStr ? ' 🕐 '+messTimeStr : '') + '</span>' : '';
+  const trackingStr=(o.tracking||'').trim();
+  const trackingBadge = trackingStr ? ' <span style="font-size:9px;background:#e6f0ff;color:#2b5cad;border:1px solid #a9c6f5;border-radius:99px;padding:1px 6px;vertical-align:middle;font-family:var(--mono)" title="เลขพัสดุ">📬 '+trackingStr+'</span>' : '';
   return `<div class="order-row${hasDetail?' has-detail':''}${isDoneLocal?' row-done':''}" id="row-${o.id}">
     <span class="cell-id">${o.id}</span>
-    <span class="cell-name" title="${o.name}" style="cursor:${hasDetail?'pointer':'default'}" onclick="${hasDetail?`toggleDetail('${o.id}')`:''}">${o.name}${messBadge}${hasDetail?'<span class="detail-dot"></span>':''}</span>
+    <span class="cell-name" title="${o.name}" style="cursor:${hasDetail?'pointer':'default'}" onclick="${hasDetail?`toggleDetail('${o.id}')`:''}">${o.name}${messBadge}${trackingBadge}${hasDetail?'<span class="detail-dot"></span>':''}</span>
     <span><span class="lvl ${levelClass(lv)}">${levelLabel(lv)}</span></span>
     <span class="cell-date ${dc}">${fmtDate(o.date)}</span>
     <span>
@@ -1130,10 +1132,25 @@ function thaiDateToShort(str){
 function parseOrder(){
   const raw=document.getElementById('rawText').value.trim(); if(!raw) return;
   const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
-  const nameLine=lines.find(l=>!/^0[6-9]\d{8}/.test(l)&&!/^\d+[\s\/]/.test(l)&&!/รอบจัดส่ง|━|สรุป|ออเดอร์|Polaroid|📦|🖨️|งานพิมพ์|สต๊ก|Photocard|จัดเซ็ต|Die-cut|STICKER/.test(l)&&l.length>1);
-  if(nameLine) document.getElementById('pName').value=nameLine;
-  const phoneMatch=raw.replace(/[-\s]/g,'').match(/0[6-9]\d{8}/);
-  if(phoneMatch) document.getElementById('pPhone').value=phoneMatch[0];
+  const PRODUCT_RE=/รอบจัดส่ง|━|สรุป|ออเดอร์|Polaroid|📦|🖨️|งานพิมพ์|สต๊ก|Photocard|จัดเซ็ต|Die-cut|STICKER/;
+  const normDigits=l=>l.replace(/[-\s]/g,'');
+  const isAddressLine=l=>/\d{5}/.test(l)&&l.length>10; // มีรหัสไปรษณีย์ 5 หลัก
+  const isPhoneOnlyLine=l=>{const d=normDigits(l);const m=d.match(/0[6-9]\d{8}/);return !!m&&d.replace(m[0],'').length===0;};
+  // 1) เบอร์โทร — หาจากทั้งข้อความ ไม่สนตำแหน่งบรรทัด
+  const phoneMatch=normDigits(raw).match(/0[6-9]\d{8}/);
+  const phone=phoneMatch?phoneMatch[0]:'';
+  if(phone) document.getElementById('pPhone').value=phone;
+  // 2) ชื่อ — บรรทัดที่ไม่ใช่ที่อยู่/ไม่ใช่บรรทัดเบอร์อย่างเดียว/ไม่ใช่บรรทัดรายการสินค้า
+  const nameLine=lines.find(l=>!isAddressLine(l)&&!isPhoneOnlyLine(l)&&!PRODUCT_RE.test(l)&&l.length>1);
+  if(nameLine){
+    let cleanedName=nameLine;
+    if(phone){
+      // ตัดเบอร์โทรที่อาจปนอยู่ในบรรทัดชื่อเดียวกัน (รองรับมี/ไม่มีขีด-เว้นวรรค)
+      const phoneVariantRe=new RegExp(phone.split('').join('[\\-\\s]*'));
+      cleanedName=cleanedName.replace(phoneVariantRe,'');
+    }
+    document.getElementById('pName').value=cleanedName.replace(/\s{2,}/g,' ').trim();
+  }
   // จับรูปแบบ dd/mm/yyyy ก่อน ถ้าไม่มีลองจับรูปแบบภาษาไทย เช่น "วันเสาร์ที่ 13 มิ.ย. 2569"
   // จับวันแบบ dd/mm/yyyy หรือ dd/mm/yy
   const dateMatch=raw.match(/รอบจัดส่ง[^:\n]*:\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/);
@@ -1161,9 +1178,39 @@ function parseOrder(){
   // auto-detect allowReview
   if(/ไม่อนุญาตนำรูปไปรีวิว/i.test(raw)) document.getElementById('pAllowReview').value='FALSE';
   else if(/อนุญาตนำรูปไปรีวิว/i.test(raw)) document.getElementById('pAllowReview').value='TRUE';
-  const addrLine=lines.find(l=>/\d{5}/.test(l)&&l.length>10);
-  const name=document.getElementById('pName').value,phone=document.getElementById('pPhone').value;
-  if(addrLine) document.getElementById('pAddress').value=`${name}\n${addrLine}\nT.${phone}`.trim();
+  const addrLine=lines.find(isAddressLine);
+  let addressText=addrLine||'';
+  if(addrLine){
+    // ตัดเบอร์โทรออกจากบรรทัดที่อยู่ก่อน (เผื่อชื่อ/เบอร์/ที่อยู่อยู่บรรทัดเดียวกัน)
+    let lineNoPhone=addrLine;
+    if(phone){
+      const phoneVariantRe=new RegExp(phone.split('').join('[\\-\\s]*'));
+      lineNoPhone=lineNoPhone.replace(phoneVariantRe,' ');
+    }
+    const ADDR_MARKER_RE=/บ้านเลขที่|เลขที่\s*\d/;
+    const markerMatch=lineNoPhone.match(ADDR_MARKER_RE);
+    if(markerMatch){
+      const startIdx=markerMatch.index;
+      const prefix=lineNoPhone.slice(0,startIdx).trim();
+      const afterStart=lineNoPhone.slice(startIdx);
+      const zipTailMatch=afterStart.match(/\d{5}(\s*\([^)]*\))?/);
+      let suffix='';
+      if(zipTailMatch){
+        const endIdx=zipTailMatch.index+zipTailMatch[0].length;
+        addressText=afterStart.slice(0,endIdx).trim();
+        suffix=afterStart.slice(endIdx).trim();
+      }else{
+        addressText=afterStart.trim();
+      }
+      // ถ้ายังไม่มีชื่อ (ไม่มีบรรทัดชื่อแยกต่างหาก) ลองดึงชื่อจากส่วนที่เหลือของบรรทัดที่อยู่นี้
+      if(!nameLine){
+        const extraName=(prefix+' '+suffix).replace(/\s{2,}/g,' ').trim();
+        if(extraName) document.getElementById('pName').value=extraName;
+      }
+    }
+  }
+  const name=document.getElementById('pName').value;
+  if(addrLine) document.getElementById('pAddress').value=`${name}\n${addressText}\nT.${phone}`.trim();
   // จับรายการสินค้าทุก section: งานพิมพ์รูป, Photocard, Memo Pad, พวงกุญแจ, สต๊กเกอร์ Die-cut, จัดเซ็ต STICKER, จัดเซ็ต Giveaway ฯลฯ
   // strategy: เก็บทุกบรรทัดที่อยู่ระหว่าง section header สินค้า กับบรรทัดสรุปเงิน/━
   const ITEM_SECTION_RE = /^(?:🖼|🃏|📝|🔑|✂️|🏷|🎁|งานพิมพ์รูป|Photocard|Memo\s*Pad|พวงกุญแจ|สต๊กเกอร์|Die-cut|จัดเซ็ต|STICKER|Giveaway)/i;
@@ -1177,7 +1224,7 @@ function parseOrder(){
   }
   if(itemLines.length) document.getElementById('pItems').value = itemLines.join('\n');
 }
-function clearParser(){['rawText','pName','pPhone','pProvince','pShipDate','pAddress','pItems'].forEach(id=>document.getElementById(id).value='');document.getElementById('pCarrier').value='SPX';document.getElementById('pAllowReview').value='TRUE';document.getElementById('pStatus').className='t-st';document.getElementById('msgOut').value='';loadNextPT();}
+function clearParser(){['rawText','pName','pPhone','pProvince','pShipDate','pAddress','pItems'].forEach(id=>document.getElementById(id).value='');document.getElementById('pCarrier').value='SPX';document.getElementById('pAllowReview').value='TRUE';document.getElementById('pStatus').className='t-st';document.getElementById('msgOut').value='';const w=document.getElementById('orderIdDupWarn');if(w)w.style.display='none';loadNextPT();}
 async function fetchOrder(){
   const orderId=document.getElementById('fetchId').value.trim();
   if(!orderId){showFetch('err','กรุณากรอกรหัสออเดอร์ค่ะ');return;}
@@ -1191,7 +1238,10 @@ async function pushOrder(){
   const orderId=document.getElementById('pOrderId').value.trim(),name=document.getElementById('pName').value.trim();
   if(!orderId){showPStatus('err','กรุณากรอกรหัสออเดอร์ก่อนค่ะ');return;}
   if(!name){showPStatus('err','กรุณากรอกชื่อผู้รับก่อนค่ะ');return;}
-  showPStatus('load','กำลัง push เข้า Sheet...');document.getElementById('btnPush').disabled=true;
+  showPStatus('load','กำลังตรวจสอบรหัสออเดอร์...');document.getElementById('btnPush').disabled=true;
+  const isDup=await checkOrderIdDup();
+  if(isDup){showPStatus('err','⚠️ รหัส '+orderId+' นี้มีออเดอร์อยู่แล้วในระบบ! กรุณาตรวจสอบก่อน push ซ้ำนะคะ');document.getElementById('btnPush').disabled=false;return;}
+  showPStatus('load','กำลัง push เข้า Sheet...');
   const params=new URLSearchParams({action:'addOrder',orderId,name,phone:document.getElementById('pPhone').value.trim(),province:document.getElementById('pProvince').value.trim(),shipDate:document.getElementById('pShipDate').value.trim(),carrier:document.getElementById('pCarrier').value,allowReview:document.getElementById('pAllowReview').value,address:document.getElementById('pAddress').value.trim(),items:document.getElementById('pItems').value.trim()});
   try{
     await fetch(SCRIPT_URL, {
@@ -1202,6 +1252,19 @@ async function pushOrder(){
   }catch(e){showPStatus('err','เชื่อมต่อไม่ได้: '+e.message);}
   finally{document.getElementById('btnPush').disabled=false;}
 }
+// ════════ เช็ครหัสออเดอร์ซ้ำ ════════
+async function checkOrderIdDup(){
+  const orderId=document.getElementById('pOrderId').value.trim();
+  const warn=document.getElementById('orderIdDupWarn');
+  if(!orderId||!/^PT-\d{5}$/.test(orderId)){ if(warn) warn.style.display='none'; return false; }
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=getOrder&orderId='+encodeURIComponent(orderId));
+    const json=await res.json();
+    if(json.ok){ if(warn) warn.style.display='block'; return true; }
+    if(warn) warn.style.display='none';
+    return false;
+  }catch(e){ if(warn) warn.style.display='none'; return false; }
+}
 function showPStatus(type,msg){const bar=document.getElementById('pStatus'),dot=document.getElementById('pDot');bar.className='t-st show t-st-'+(type==='ok'?'ok':type==='err'?'err':'load');dot.className='t-dot t-dot-'+(type==='ok'?'ok':type==='err'?'err':'load');document.getElementById('pMsg').textContent=msg;}
 function shortDate(v){
   // แปลง dd/mm/yyyy → dd/mm/yy (2 หลักสุดท้าย) หรือคืนค่าเดิม
@@ -1210,7 +1273,7 @@ function shortDate(v){
   if(p){const yy=String(parseInt(p[3])%100).padStart(2,'0');return p[1]+'/'+p[2].padStart(2,'0')+'/'+yy;}
   return v;
 }
-function genMsg(){const orderId=document.getElementById('pOrderId').value.trim()||'PT-XXXXX',shipDate=shortDate(document.getElementById('pShipDate').value.trim());const carrierVal=document.getElementById('pCarrier').value;const carrierTxt=carrierVal==='LALAMOVE'?'🛵 แมสเซ็นเจอร์':carrierVal==='FLASH'?'⚡ Flash':'🚚 SPX';const reviewVal=document.getElementById('pAllowReview').value;const reviewTxt=reviewVal==='TRUE'?'✅ อนุญาตนำรูปไปรีวิว':'❌ ไม่อนุญาตนำรูปไปรีวิว';document.getElementById('msgOut').value=`ขอบคุณมากๆเลยน้าค้าที่อุดหนุน 🥰\n\n✅ รับออเดอร์เรียบร้อยแล้วค่ะ\nตรวจสอบไฟล์และยอดชำระครบแล้วน้า ตอนนี้งานเข้าสู่คิวผลิตเรียบร้อยค่ะ 🎉\n\n🔖 รหัสออเดอร์ : ${orderId}\n📦 รอบจัดส่ง : ${shipDate}\n${carrierTxt}\n${reviewTxt}\n🔔 แจ้งเลขพัสดุช่วง 22:00 น. เป็นต้นไป\n\n📲 ติดตามสถานะงานได้ที่\nhttps://photolovertamsung.github.io/polaroid-tracking/index.html?code=${orderId}\n\n⏳ ข้อมูลจะอัปเดตหลังโอนประมาณ 24 ชั่วโมงน้า\nหากมีคำถามทักหาบลูได้ตลอดนะคะ 💙`;}
+function genMsg(){const orderId=document.getElementById('pOrderId').value.trim()||'PT-XXXXX',shipDate=shortDate(document.getElementById('pShipDate').value.trim());const carrierVal=document.getElementById('pCarrier').value;const carrierTxt=carrierVal==='LALAMOVE'?'🛵 ขนส่ง : แมสเซ็นเจอร์':carrierVal==='FLASH'?'⚡ ขนส่ง : Flash':'🚚 ขนส่ง : SPX';const reviewVal=document.getElementById('pAllowReview').value;const reviewTxt=reviewVal==='TRUE'?'✅ อนุญาตนำรูปไปรีวิว':'❌ ไม่อนุญาตนำรูปไปรีวิว';document.getElementById('msgOut').value=`ขอบคุณมาก ๆ เลยน้าค้าที่อุดหนุน 🥰\n\n✅ รับออเดอร์เรียบร้อยแล้วค่ะ\nตรวจสอบไฟล์และยอดชำระครบแล้วน้า ตอนนี้งานเข้าสู่คิวผลิตเรียบร้อยค่ะ 🎉\n\n📌 ขอสงวนสิทธิ์ไม่สามารถยกเลิกออเดอร์ หรือขอคืนเงินได้ทุกกรณี หลังจากยืนยันการสั่งซื้อและชำระเงินแล้วนะคะ\n\n🔖 รหัสออเดอร์ : ${orderId}\n📦 รอบจัดส่ง : ${shipDate}\n${carrierTxt}\n${reviewTxt}\n🔔 จะแจ้งเลขพัสดุและรูปสินค้า ช่วง 22:00 น. เป็นต้นไป \n\n📲 ติดตามสถานะงานได้ที่\nhttps://photolovertamsung.github.io/polaroid-tracking/index.html?code=${orderId}\n\n⏳ ข้อมูลในระบบจะอัปเดตภายในประมาณ 24 ชั่วโมงหลังชำระเงินนะคะ\nหากมีคำถามเพิ่มเติม ทักหาบลูได้ตลอดเลยค่ะ 💙`;}
 function copyMsg(){const ta=document.getElementById('msgOut');if(!ta.value)genMsg();const btn=document.getElementById('btnCopyMsg');navigator.clipboard?.writeText(ta.value).then(()=>{btn.textContent='✅ คัดลอกแล้ว';setTimeout(()=>{btn.textContent='📋 คัดลอก';},2000);}).catch(()=>{ta.select();document.execCommand('copy');btn.textContent='✅ คัดลอกแล้ว';setTimeout(()=>{btn.textContent='📋 คัดลอก';},2000);});}
 function lockPT(el){let v=el.value;if(!v.startsWith('PT-'))v='PT-';v='PT-'+v.slice(3).replace(/[^0-9]/g,'').slice(0,5);el.value=v;}
 async function loadNextPT(){try{const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!G2:G?key=${API_KEY}`;const res=await fetch(url);const json=await res.json();const rows=json.values||[];let max=0;for(const row of rows){const m=(row[0]||'').trim().match(/^PT-(\d+)$/);if(m)max=Math.max(max,parseInt(m[1]));}document.getElementById('pOrderId').value='PT-'+String(max+1).padStart(5,'0');}catch(e){document.getElementById('pOrderId').value='PT-';}}
