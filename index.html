@@ -1227,7 +1227,7 @@ async function fetchOrder(){
   const orderId=document.getElementById('fetchId').value.trim();
   if(!orderId){showFetch('err','กรุณากรอกรหัสออเดอร์ค่ะ');return;}
   showFetch('load','กำลังดึงข้อมูล...');document.getElementById('btnFetch').disabled=true;
-  try{const res=await fetch(SCRIPT_URL+'?action=getOrder&orderId='+encodeURIComponent(orderId));const json=await res.json();if(json.ok){document.getElementById('pOrderId').value=json.orderId||'';document.getElementById('pName').value=json.name||'';document.getElementById('pPhone').value=json.phone||'';document.getElementById('pProvince').value=json.province||'';document.getElementById('pShipDate').value=json.shipDate||'';document.getElementById('pAddress').value=json.address||'';document.getElementById('pItems').value=json.items||'';showFetch('ok','✨ ดึงข้อมูลสำเร็จค่ะ!');}else showFetch('err',json.msg||'ไม่พบออเดอร์นี้ค่ะ');}
+  try{const json=await getOrderFast(orderId);if(json.ok){document.getElementById('pOrderId').value=json.orderId||'';document.getElementById('pName').value=json.name||'';document.getElementById('pPhone').value=json.phone||'';document.getElementById('pProvince').value=json.province||'';document.getElementById('pShipDate').value=json.shipDate||'';document.getElementById('pAddress').value=json.address||'';document.getElementById('pItems').value=json.items||'';showFetch('ok','✨ ดึงข้อมูลสำเร็จค่ะ!');}else showFetch('err',json.msg||'ไม่พบออเดอร์นี้ค่ะ');}
   catch(e){showFetch('err','เชื่อมต่อ API ไม่ได้: '+e.message);}
   finally{document.getElementById('btnFetch').disabled=false;}
 }
@@ -1256,8 +1256,7 @@ async function checkOrderIdDup(){
   const warn=document.getElementById('orderIdDupWarn');
   if(!orderId||!/^PT-\d{5}$/.test(orderId)){ if(warn) warn.style.display='none'; return false; }
   try{
-    const res=await fetch(SCRIPT_URL+'?action=getOrder&orderId='+encodeURIComponent(orderId));
-    const json=await res.json();
+    const json=await getOrderFast(orderId);
     if(json.ok){ if(warn) warn.style.display='block'; return true; }
     if(warn) warn.style.display='none';
     return false;
@@ -1275,6 +1274,43 @@ function genMsg(){const orderId=document.getElementById('pOrderId').value.trim()
 function copyMsg(){const ta=document.getElementById('msgOut');if(!ta.value)genMsg();const btn=document.getElementById('btnCopyMsg');navigator.clipboard?.writeText(ta.value).then(()=>{btn.textContent='✅ คัดลอกแล้ว';setTimeout(()=>{btn.textContent='📋 คัดลอก';},2000);}).catch(()=>{ta.select();document.execCommand('copy');btn.textContent='✅ คัดลอกแล้ว';setTimeout(()=>{btn.textContent='📋 คัดลอก';},2000);});}
 function lockPT(el){let v=el.value;if(!v.startsWith('PT-'))v='PT-';v='PT-'+v.slice(3).replace(/[^0-9]/g,'').slice(0,5);el.value=v;}
 async function loadNextPT(){try{const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!G2:G?key=${API_KEY}`;const res=await fetch(url);const json=await res.json();const rows=json.values||[];let max=0;for(const row of rows){const m=(row[0]||'').trim().match(/^PT-(\d+)$/);if(m)max=Math.max(max,parseInt(m[1]));}document.getElementById('pOrderId').value='PT-'+String(max+1).padStart(5,'0');}catch(e){document.getElementById('pOrderId').value='PT-';}}
+
+// ════════ ดึงข้อมูลออเดอร์ตรงจาก Sheets API (เร็วกว่าผ่าน Apps Script มาก) ════════
+// คอลัมน์อ้างอิงตาม Code.gs: A=tracking B=name C=phone D=province E=shipDate F=carrier
+// G=orderId H=step I=notes J=items K=trackingLink L=address O=level P=done R=allowReview S=messTime
+async function getOrderFast(orderId){
+  const target=String(orderId||'').trim();
+  if(!target) return {ok:false, msg:'ไม่ได้ระบุรหัสออเดอร์'};
+  try{
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!A2:S?key=${API_KEY}`;
+    const res=await fetch(url);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json=await res.json();
+    const rows=json.values||[];
+    for(const r of rows){
+      if(String(r[6]||'').trim()===target){
+        return {
+          ok:true,
+          orderId:     r[6]  || '',
+          name:        r[1]  || '',
+          phone:       r[2]  || '',
+          province:    r[3]  || '',
+          shipDate:    r[4]  || '',
+          carrier:     r[5]  || 'SPX',
+          address:     r[11] || '',
+          items:       r[9]  || '',
+          tracking:    r[0]  || '',
+          step:        r[7]  || '',
+          messTime:    r[18] || '',
+          allowReview: r[17] || '',
+        };
+      }
+    }
+    return {ok:false, msg:'ไม่พบออเดอร์ '+orderId};
+  }catch(e){
+    return {ok:false, msg:e.message};
+  }
+}
 function openSlip(){
   document.getElementById('sOrderId').textContent=document.getElementById('pOrderId').value.trim()||'—';
   document.getElementById('sRound').textContent='รอบ: '+(document.getElementById('pShipDate').value.trim()||'—');
@@ -1353,8 +1389,7 @@ async function openSlipFromRow(orderId, name, shipDate){
 
   // ดึงข้อมูลเพิ่มเติม (address, items) จาก Sheet
   try {
-    const res = await fetch(SCRIPT_URL + '?action=getOrder&orderId=' + encodeURIComponent(orderId));
-    const json = await res.json();
+    const json = await getOrderFast(orderId);
     if (json.ok) {
       document.getElementById('sRound').textContent = 'รอบ: ' + (json.shipDate || shipDate || '—');
       document.getElementById('sAddress').textContent = json.address || name || '—';
@@ -1388,8 +1423,7 @@ async function openEdit(orderId){
   document.getElementById('editSaveBtn').disabled = true;
   document.getElementById('editModal').classList.add('open');
   try {
-    const res = await fetch(SCRIPT_URL + '?action=getOrder&orderId=' + encodeURIComponent(orderId));
-    const json = await res.json();
+    const json = await getOrderFast(orderId);
     if(json.ok){
       document.getElementById('editAddress').value = json.address || '';
       // แปลง ISO date → dd/mm/yyyy
