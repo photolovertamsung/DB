@@ -1211,14 +1211,22 @@ function parseOrder(){
   if(addressText) document.getElementById('pAddress').value=`${name}\n${addressText}\nT.${phone}`.trim();
   // จับรายการสินค้าทุก section: งานพิมพ์รูป, Photocard, Memo Pad, พวงกุญแจ, สต๊กเกอร์ Die-cut, จัดเซ็ต STICKER, จัดเซ็ต Giveaway ฯลฯ
   // strategy: เก็บทุกบรรทัดที่อยู่ระหว่าง section header สินค้า กับบรรทัดสรุปเงิน/━
-  const ITEM_SECTION_RE = /^(?:🖼|🃏|📝|🔑|✂️|🏷|🎁|งานพิมพ์รูป|Photocard|Memo\s*Pad|พวงกุญแจ|สต๊กเกอร์|Die-cut|จัดเซ็ต|STICKER|Giveaway)/i;
-  const STOP_RE = /^(?:━|💰|🚚|✅\s*รวม|ค่าสินค้า|รวม\s*[:฿]|📋|📅|🕙|⚠️|☑️|📸\s*รีวิว)/;
-  const itemLines = [];
-  let inItems = false;
-  for(const line of lines){
-    if(STOP_RE.test(line)){ inItems = false; }
-    if(ITEM_SECTION_RE.test(line)){ inItems = true; }
-    if(inItems) itemLines.push(line);
+  const DASH_RE = /^━+$/;
+  const dashIdx = [];
+  lines.forEach((l,i)=>{ if(DASH_RE.test(l)) dashIdx.push(i); });
+  let itemLines = [];
+  if(dashIdx.length>=2){
+    itemLines = lines.slice(dashIdx[0]+1, dashIdx[1]);
+  } else {
+    // fallback: ถ้าไม่มีเส้นคั่นครบ 2 เส้น ใช้ logic เดิม (กันเคสข้อความไม่ครบ)
+    const ITEM_SECTION_RE = /^(?:🖼|🃏|📝|🔑|✂️|🏷|🎁|งานพิมพ์รูป|Photocard|Memo\s*Pad|พวงกุญแจ|สต๊กเกอร์|Die-cut|จัดเซ็ต|STICKER|Giveaway)/i;
+    const STOP_RE = /^(?:━|💰|🚚|✅\s*รวม|ค่าสินค้า|รวม\s*[:฿]|📋|📅|🕙|⚠️|☑️|📸\s*รีวิว)/;
+    let inItems = false;
+    for(const line of lines){
+      if(STOP_RE.test(line)){ inItems = false; }
+      if(ITEM_SECTION_RE.test(line)){ inItems = true; }
+      if(inItems) itemLines.push(line);
+    }
   }
   if(itemLines.length) document.getElementById('pItems').value = itemLines.join('\n');
 }
