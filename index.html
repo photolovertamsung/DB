@@ -48,6 +48,7 @@ main{max-width:920px;margin:0 auto;padding:16px 16px 80px;display:flex;flex-dire
 .zone-stripe{width:3px;height:14px;border-radius:99px;flex-shrink:0}
 .zone-title{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .zone-badge{margin-left:auto;font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:99px;background:var(--gray-l);color:var(--gray)}
+.round-full-banner{background:var(--amber-l);color:var(--amber);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;margin:0 0 10px}
 .zone-z1 .zone-stripe{background:var(--red)}.zone-z1 .zone-title{color:var(--red)}
 .zone-z2 .zone-stripe{background:var(--pink)}.zone-z2 .zone-title{color:var(--pink)}
 .zone-z3 .zone-stripe{background:var(--green)}.zone-z3 .zone-title{color:var(--green)}
@@ -544,6 +545,7 @@ const TAB_NAME   = 'data';
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-4cyEODmJro6hXvihpKajdTeAJzHCo129LEEz4WWPQrlVnNWZCHrIsawlpNkYFgVN/exec';
 const B_CSV      = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRTvOZSL9sX3ezpv8wGlhHB4o50K6dPYPs5L_64JjQSbVPGtutC-YYixoMe_z7yJ8MY2rdmN64MEZTE/pub?output=csv`;
 const COL = { tracking:0, name:1, date:4, carrier:5, orderId:6, level:14, step:7, detail:9, done:15, messTime:18, allowReview:16 };
+const ROUND_FULL_THRESHOLD = 20; // จำนวนออเดอร์ต่อรอบที่ถือว่าเต็ม
 const STEP_LABELS = {1:'💸 โอนเงิน',2:'📂 โหลดไฟล์',3:'⏳ รอคิว',4:'🖨️ ผลิต',5:'📦 แพ็ก',6:'🚚 จัดส่ง'};
 const STEP_COLORS = {1:'step-s1',2:'step-s2',3:'step-s3',4:'step-s4',5:'step-s5',6:'step-s6'};
 
@@ -698,6 +700,16 @@ function levelClass(s){return{1:'lvl-1',2:'lvl-2',3:'lvl-3'}[s]||'';}
 // คอลัมน์ O = ระดับงาน (1=งานไว, 2=งานหลัก, 3=งานใหญ่)
 function getLevel(o){ return Math.min(Math.max(o.level||1,1),3); }
 
+function activeRoundBannerHTML(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const dated = allOrders.filter(o=>o.date && o.date>=today); // ไม่รวมงานล่าช้า
+  if(!dated.length) return '';
+  const maxTime = Math.max(...dated.map(o=>+o.date));
+  const roundOrders = dated.filter(o=>+o.date===maxTime);
+  if(roundOrders.length < ROUND_FULL_THRESHOLD) return '';
+  return `<div class="round-full-banner">⚠️ รอบ ${fmtDate(roundOrders[0].date)} มีออเดอร์ครบ ${roundOrders.length} รายการแล้ว</div>`;
+}
+
 function renderAll(){
   const today=new Date(); today.setHours(0,0,0,0);
   let orders=[...allOrders];
@@ -715,6 +727,7 @@ function renderAll(){
   const lateN=allOrders.filter(o=>isLate(o.date)).length;
 
   document.getElementById('main').innerHTML=`
+    ${activeRoundBannerHTML()}
     <div class="stat-row">
       <div class="stat-card"><div class="stat-val">${allOrders.length}</div><div class="stat-lbl">ทั้งหมด</div></div>
       <div class="stat-card stat-pink"><div class="stat-val">${todayN}</div><div class="stat-lbl">📌 วันนี้</div></div>
