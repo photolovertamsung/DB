@@ -558,6 +558,7 @@ function updateClock(){
   document.getElementById('clock').textContent=n.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
 setInterval(updateClock,1000); updateClock();
+setInterval(()=>loadData(true), 5*60*1000); // ดึงข้อมูลใหม่เงียบๆ ทุก 5 นาที
 
 // ════════ TAB ════════
 function switchTab(tab,el){
@@ -644,9 +645,12 @@ function applyDbSearch(){
 }
 
 // ════════ LOAD DATA ════════
-async function loadData(){
-  const icon=document.getElementById('ri'); icon.classList.add('spin');
-  document.getElementById('main').innerHTML='<div style="padding:24px;text-align:center;font-size:12px;color:var(--text-m)">⏳ กำลังดึงข้อมูล...</div>';
+async function loadData(silent=false){
+  const icon=document.getElementById('ri');
+  if(!silent){
+    icon.classList.add('spin');
+    document.getElementById('main').innerHTML='<div style="padding:24px;text-align:center;font-size:12px;color:var(--text-m)">⏳ กำลังดึงข้อมูล...</div>';
+  }
   try{
     const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(TAB_NAME)}!A2:S?key=${API_KEY}`;
     const res=await fetch(url);
@@ -674,8 +678,10 @@ async function loadData(){
     if(btnDone) btnDone.title=`ออเดอร์เสร็จแล้ว ${doneOrders.length} รายการ`;
     if(showDone) renderDoneZone();
   }catch(e){
-    document.getElementById('main').innerHTML=`<div style="background:var(--red-l);color:var(--red);border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.6;margin:12px"><strong style="display:block;font-size:13px;margin-bottom:4px">ดึงข้อมูลไม่ได้</strong>${e.message}</div>`;
-  }finally{icon.classList.remove('spin');}
+    if(!silent){
+      document.getElementById('main').innerHTML=`<div style="background:var(--red-l);color:var(--red);border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.6;margin:12px"><strong style="display:block;font-size:13px;margin-bottom:4px">ดึงข้อมูลไม่ได้</strong>${e.message}</div>`;
+    }
+  }finally{if(!silent) icon.classList.remove('spin');}
 }
 
 // ════════ FILTER ════════
