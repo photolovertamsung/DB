@@ -8,17 +8,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --pink:#d4537e;--pink-l:#fbeaf0;--pink-d:#72243e;
+  --pink:#7C6FC9;--pink-l:#E6E6FA;--pink-d:#4A3F82;
   --amber:#ba7517;--amber-l:#faeeda;
   --red:#a32d2d;--red-l:#fcebeb;
   --green:#0f6e56;--green-l:#e1f5ee;
   --blue:#185fa5;--blue-l:#e6f1fb;
   --gray:#5f5e5a;--gray-l:#f1efe8;
-  --bg:#faf9f7;--surface:#fff;
+  --bg:#F5FBF8;--surface:#fff;
   --border:rgba(0,0,0,0.08);
   --text:#1a1a18;--text-m:#888780;
   --mono:'IBM Plex Mono',monospace;--sans:'Sarabun',sans-serif;
+  --acc-green:#2E8B57;--acc-green-l:#DFF5E9;--acc-green-d:#1B5E3B;
 }
+/* หน้า Dashboard และ เพิ่มออเดอร์ เน้นโทนเขียวแทนม่วง */
+#page-dashboard,#page-parser{
+  --pink:var(--acc-green);--pink-l:var(--acc-green-l);--pink-d:var(--acc-green-d);
+}
+.nav-tab.tab-green.active{color:var(--acc-green);border-bottom-color:var(--acc-green);}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
@@ -260,23 +266,16 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
     font-style:normal;
   }
   :root{
-    --pink:#ff6f91;
-    --pink-dark:#e0567a;
-    --bg:#fff8f9;
-    --ink:#2b2b2b;
-    --line:#f0d6dd;
+    --tool-accent:#7C6FC9;
+    --tool-accent-d:#4A3F82;
+    --tool-bg:#F5FBF8;
+    --tool-ink:#1a1a18;
+    --tool-line:#E6E0F5;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:'Segoe UI', Tahoma, sans-serif;
-    background:var(--bg);
-    color:var(--ink);
-    padding:20px;
-  }
   h1{
     font-size:1.3rem;
-    color:var(--pink-dark);
+    color:var(--tool-accent-d);
     margin:0 0 4px;
   }
   .sub{
@@ -286,7 +285,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
   }
   .card{
     background:#fff;
-    border:1px solid var(--line);
+    border:1px solid var(--tool-line);
     border-radius:14px;
     padding:16px;
     margin-bottom:18px;
@@ -315,12 +314,12 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
   }
   input:focus, select:focus{
     outline:none;
-    border-color:var(--pink);
+    border-color:var(--tool-accent);
   }
   select#category{
-    border-color:var(--pink);
+    border-color:var(--tool-accent);
     font-weight:600;
-    color:var(--pink-dark);
+    color:var(--tool-accent-d);
   }
   #dynamicFields{
     display:grid;
@@ -345,14 +344,14 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
     font-weight:600;
   }
   .btn-main{
-    background:var(--pink);
+    background:var(--tool-accent);
     color:#fff;
     width:100%;
     margin-top:14px;
     padding:12px;
     font-size:1rem;
   }
-  .btn-main:active{background:var(--pink-dark);}
+  .btn-main:active{background:var(--tool-accent-d);}
   .btn-small{
     background:#f2f2f2;
     color:#444;
@@ -376,7 +375,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
   .list-header h2{
     font-size:1rem;
     margin:0;
-    color:var(--pink-dark);
+    color:var(--tool-accent-d);
   }
   .empty-hint{
     text-align:center;
@@ -388,7 +387,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
     display:flex;
     justify-content:space-between;
     align-items:center;
-    border:1px solid var(--line);
+    border:1px solid var(--tool-line);
     border-radius:10px;
     padding:10px 14px;
     margin-bottom:8px;
@@ -396,7 +395,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
   }
   .label-item .info b{
     font-size:1rem;
-    color:var(--pink-dark);
+    color:var(--tool-accent-d);
   }
   .label-item .info .meta{
     font-size:0.8rem;
@@ -404,7 +403,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
     margin-top:2px;
   }
   .label-item .qty-badge{
-    background:var(--pink);
+    background:var(--tool-accent);
     color:#fff;
     border-radius:20px;
     padding:3px 12px;
@@ -504,9 +503,9 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
   <span class="logo-pill">PT</span>
   <h1>Polaroid Tamsung</h1>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
+    <button class="nav-tab tab-green active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
     <button class="nav-tab" onclick="switchTab('search',this)">🔍 ค้นหา</button>
-    <button class="nav-tab" onclick="switchTab('parser',this)">➕ เพิ่มออเดอร์</button>
+    <button class="nav-tab tab-green" onclick="switchTab('parser',this)">➕ เพิ่มออเดอร์</button>
     <button class="nav-tab" onclick="switchTab('board',this)">📋 สถานะ</button>
     <button class="nav-tab" onclick="switchTab('label',this)">🏷️ ป้ายแพ็ค</button>
   </div>
@@ -1139,7 +1138,7 @@ function zoneSummaryHTML(zid,orders){
     : '';
 
   return `<div class="zone-summary" id="zsm-${zid}">
-    <div class="zsm-row zsm-total"><span>📦 ออเดอร์ทั้งหมด</span><span class="zsm-val" style="background:var(--pink-l);color:var(--pink);border-color:rgba(212,83,126,.3)">${orders.length}</span></div>
+    <div class="zsm-row zsm-total"><span>📦 ออเดอร์ทั้งหมด</span><span class="zsm-val" style="background:var(--pink-l);color:var(--pink);border-color:rgba(46,139,87,.3)">${orders.length}</span></div>
     <hr class="zsm-divider">
     ${typeRows}
     ${photoRows}
