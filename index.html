@@ -2804,11 +2804,9 @@ window.addEventListener('afterprint', function(){
 
 /* ================= ดาวน์โหลดเป็นรูปภาพ (canvas) ================= */
 /* หมวดที่ถือเป็น "งานสติกเกอร์" ใช้พื้นหลัง Sticker Tamsung: Die-cut 100%, Die-cut 50%, Sticker Set */
-function isStickerItem(itemName){
-  return /^Die-cut 100%/.test(itemName) || /^Die-cut 50%/.test(itemName) || /^Sticker Set/.test(itemName);
-}
+/* ใช้พื้นหลัง Polaroid Tamsung แบบเดียวกับทุกหมวดสินค้า (เลิกแยกพื้นหลังสติกเกอร์/รูป) */
 function pickTmplSrc(itemName){
-  return isStickerItem(itemName) ? TMPL_SRC_STICKER : TMPL_SRC;
+  return TMPL_SRC;
 }
 var _tmplImgCache = {};
 function loadImage(src){
