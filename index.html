@@ -607,11 +607,7 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
   <label>📋 วางข้อความสรุปจากระบบ (คัดลอกมาแปะได้เลย)</label>
   <textarea id="pasteBox" rows="4" placeholder="เช่น&#10;• Die-cut 100% A4 ขนาด 4 cm | เคลือบทะเลดาว x2แผ่น = 100.00฿"
     style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:0.9rem;font-family:inherit;resize:vertical;"></textarea>
-  <div style="display:flex;gap:10px;margin-top:8px;align-items:flex-end;">
-    <div style="flex:1;">
-      <label>เลขออเดอร์ (ใช้กับทุกรายการที่แยกได้)</label>
-      <input type="text" id="pasteOrderNo" placeholder="เช่น 1234">
-    </div>
+  <div style="margin-top:8px;">
     <button class="btn btn-small" style="background:var(--pink);color:#fff;padding:9px 16px;white-space:nowrap;" onclick="parseAndAdd()">✂️ แยกรายการ</button>
   </div>
 </div>
@@ -623,10 +619,6 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--pink);cursor:poin
   <div id="dynamicFields"></div>
 
   <div class="form-grid" style="margin-top:12px;">
-    <div>
-      <label>เลขออเดอร์ (ถ้ามี)</label>
-      <input type="text" id="orderNo" placeholder="เช่น 1234">
-    </div>
     <div>
       <label>จำนวนชิ้น</label>
       <input type="number" id="qty" placeholder="เช่น 12" min="1">
@@ -2404,71 +2396,17 @@ function onDC100SizeChange(){
     html += field('ระบุขนาด (cm)', '<input type="number" id="f_customcm" min="0.1" step="0.1" placeholder="เช่น 4.5" oninput="onDC100Change()">');
   }
   html += '</div>';
-  html += '<div style="margin-top:8px"><label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="f_mixed" onchange="onDC100MixedToggle()"> 🎨 คละลาย (ตัดหลายลายในแผ่นเดียวกัน)</label></div>';
-  html += '<div class="full" id="designQtyBox" style="display:none;margin-top:6px"></div>';
   html += '<div class="hint-empty" id="dc100Hint" style="padding-top:6px;"></div>';
   sub.innerHTML = html;
   onDC100Change();
 }
 
-/* สร้าง/ล้างช่องกรอก "จำนวนต่อลาย" ตอนติ๊ก/เลิกติ๊ก คละลาย */
-function onDC100MixedToggle(){
-  var mixed = document.getElementById('f_mixed').checked;
-  var box = document.getElementById('designQtyBox');
-  if(!mixed){
-    box.style.display = 'none';
-    box.innerHTML = '';
-  } else {
-    box.style.display = '';
-    renderDesignRows(2); // เริ่มต้น 2 ลาย
-  }
-  onDC100Change();
-}
-
-function renderDesignRows(count, keepValues){
-  var box = document.getElementById('designQtyBox');
-  var prevVals = [];
-  if(keepValues){
-    box.querySelectorAll('.design-qty-input').forEach(function(inp){ prevVals.push(inp.value); });
-  }
-  var html = '<div style="display:flex;flex-direction:column;gap:6px">';
-  for(var i=0;i<count;i++){
-    var val = prevVals[i] !== undefined ? prevVals[i] : '';
-    html += '<div style="display:flex;align-items:center;gap:8px">'
-      + '<span style="font-size:12px;color:var(--text-m);min-width:52px">ลายที่ '+(i+1)+'</span>'
-      + '<input type="number" class="design-qty-input" min="0" placeholder="จำนวนชิ้น" value="'+escapeAttr(val)+'" oninput="onDC100Change()" style="flex:1">'
-      + (count > 2 ? '<button type="button" onclick="removeDesignRow('+i+')" style="border:none;background:none;color:var(--red,#c53030);font-size:16px;cursor:pointer;padding:0 4px">✕</button>' : '')
-      + '</div>';
-  }
-  html += '</div><button type="button" onclick="addDesignRow()" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;color:var(--text-m)">+ เพิ่มลาย</button>';
-  box.innerHTML = html;
-}
-
-function addDesignRow(){
-  var count = document.querySelectorAll('.design-qty-input').length + 1;
-  renderDesignRows(count, true);
-  onDC100Change();
-}
-
-function removeDesignRow(idx){
-  var inputs = document.querySelectorAll('.design-qty-input');
-  if(inputs.length <= 2) return; // ขั้นต่ำ 2 ลายตอนคละ
-  var vals = [];
-  inputs.forEach(function(inp,i){ if(i!==idx) vals.push(inp.value); });
-  renderDesignRows(vals.length, false);
-  var newInputs = document.querySelectorAll('.design-qty-input');
-  newInputs.forEach(function(inp,i){ inp.value = vals[i] !== undefined ? vals[i] : ''; });
-  onDC100Change();
-}
-
-/* เรียกตอนพิมพ์ในช่องจำนวนแผ่น/ระบุขนาด/จำนวนต่อลาย — คำนวณ hint ใหม่เฉยๆ ไม่ไปรีสร้าง input เดิม (ไม่งั้นค่าที่พิมพ์จะหาย) */
+/* เรียกตอนพิมพ์ในช่องจำนวนแผ่น/ระบุขนาด — คำนวณ hint ใหม่เฉยๆ ไม่ไปรีสร้าง input เดิม (ไม่งั้นค่าที่พิมพ์จะหาย) */
 function onDC100Change(){
   var sizeVal = document.getElementById('f_size') ? document.getElementById('f_size').value : '';
   var isCustom = sizeVal === 'อื่นๆ (ระบุ)';
   var cm = isCustom ? parseFloat((document.getElementById('f_customcm')||{}).value) : parseFloat(sizeVal);
   var sheets = parseFloat((document.getElementById('f_sheets')||{}).value);
-  var mixedEl = document.getElementById('f_mixed');
-  var mixed = mixedEl ? mixedEl.checked : false;
   var hint = document.getElementById('dc100Hint');
   if(!hint) return;
   if(cm && sheets){
@@ -2476,19 +2414,7 @@ function onDC100Change(){
     var ref = perSheet * sheets;
     var qtyInput = document.getElementById('qty');
     var txt = '📐 ระบบคำนวณ: ' + perSheet + ' ชิ้น/แผ่น × ' + sheets + ' แผ่น = ' + ref + ' ชิ้น';
-
-    if(mixed){
-      var designVals = Array.prototype.map.call(document.querySelectorAll('.design-qty-input'), function(inp){ return parseFloat(inp.value) || 0; });
-      var sum = designVals.reduce(function(a,b){ return a+b; }, 0);
-      var listTxt = designVals.map(function(v,i){ return 'ลายที่'+(i+1)+' '+v+' ชิ้น'; }).join(' • ');
-      txt += '<br><b style="font-size:13px">🎨 คละ ' + designVals.length + ' ลาย: ' + listTxt + ' (รวม ' + sum + ' ชิ้น)</b>';
-      if(sum > 0 && sum !== ref){
-        txt = '<div>' + txt + '</div><div style="color:var(--red,#c53030);font-weight:700;margin-top:4px">⚠️ ยอดรวมที่กรอก (' + sum + ') ไม่ตรงกับที่ระบบคำนวณ (' + ref + ') เช็คก่อนตัด/แพ็ก</div>';
-      }
-      if(qtyInput) qtyInput.value = sum > 0 ? sum : ref;
-    } else {
-      if(qtyInput) qtyInput.value = ref;
-    }
+    if(qtyInput) qtyInput.value = ref;
     hint.innerHTML = txt;
   } else {
     hint.textContent = 'กรอกขนาดกับจำนวนแผ่นเพื่อให้ระบบคำนวณจำนวนชิ้นให้อัตโนมัติ';
@@ -2536,16 +2462,7 @@ function buildLabelInfo(){
     var refQty = (cm && sheets) ? calcPerSheet(cm) * sheets : null;
     var sheetsInfo = sheets ? (sheets + ' แผ่น') : '';
     var perSheet = cm ? calcPerSheet(cm) : null;
-    var mixedEl = document.getElementById('f_mixed');
-    var mixed = mixedEl ? mixedEl.checked : false;
-    var designsInfo = '';
-    if(mixed){
-      var designVals = Array.prototype.map.call(document.querySelectorAll('.design-qty-input'), function(inp){ return parseFloat(inp.value) || 0; });
-      var sum = designVals.reduce(function(a,b){ return a+b; }, 0);
-      var listTxt = designVals.map(function(v,i){ return 'ลายที่'+(i+1)+' '+v+' ชิ้น'; }).join(' • ');
-      designsInfo = 'คละ '+designVals.length+' ลาย: '+listTxt + ((sum>0 && refQty && sum!==refQty) ? ' ⚠️ ไม่ตรงระบบ' : '');
-    }
-    return {itemName:'Die-cut 100% A4 ขนาด '+size, meta: coat, sheetsInfo: sheetsInfo, refQty: refQty, perSheet: perSheet, designsInfo: designsInfo};
+    return {itemName:'Die-cut 100% A4 ขนาด '+size, meta: coat, sheetsInfo: sheetsInfo, refQty: refQty, perSheet: perSheet};
   }
   if(cat === 'dc50'){
     var size = byId('f_size'), coat = byId('f_coat');
@@ -2647,7 +2564,7 @@ function fetchOrderAndAdd(){
   }
   labels.length = 0; // ล้างรายการเก่าทิ้งก่อนดึงข้อมูลใหม่
   parsed.forEach(function(p){
-    labels.push({ itemName:p.itemName, meta:p.meta, sheetsInfo:p.sheetsInfo||'', refQty:p.refQty||null, perSheet:p.perSheet||null, qty:p.qty, unit:p.unit, orderNo:order.id });
+    labels.push({ itemName:p.itemName, meta:p.meta, sheetsInfo:p.sheetsInfo||'', refQty:p.refQty||null, perSheet:p.perSheet||null, qty:p.qty, unit:p.unit });
   });
   save();
   render();
@@ -2735,14 +2652,13 @@ function parsePastedText(text){
 
 function parseAndAdd(){
   var text = document.getElementById('pasteBox').value;
-  var orderNo = document.getElementById('pasteOrderNo').value.trim();
   var parsed = parsePastedText(text);
   if(parsed.length === 0){
     alert('ไม่เจอรายการสินค้าในข้อความที่วางนะคับ ลองเช็กรูปแบบอีกทีนะคับ (ต้องมี x จำนวน = ราคา฿)');
     return;
   }
   parsed.forEach(function(p){
-    labels.push({ itemName:p.itemName, meta:p.meta, sheetsInfo:p.sheetsInfo||'', refQty:p.refQty||null, perSheet:p.perSheet||null, qty:p.qty, unit:p.unit, orderNo:orderNo });
+    labels.push({ itemName:p.itemName, meta:p.meta, sheetsInfo:p.sheetsInfo||'', refQty:p.refQty||null, perSheet:p.perSheet||null, qty:p.qty, unit:p.unit });
   });
   save();
   render();
@@ -2773,7 +2689,7 @@ function render(){
 
   body.innerHTML = labels.map(function(l, i){
     var bonus = (l.refQty && l.qty > l.refQty) ? (l.qty - l.refQty) : 0;
-    var metaLine = [l.meta, l.sheetsInfo, (l.orderNo? 'ออเดอร์ #'+l.orderNo : '')].filter(Boolean).join(' • ');
+    var metaLine = [l.meta, l.sheetsInfo].filter(Boolean).join(' • ');
     var perSheetLine = l.perSheet ? ('<div style="font-size:0.95rem;font-weight:700;color:#2f855a;margin-top:2px">📐 จำนวนที่ได้ต่อแผ่น: '+l.perSheet+' '+(l.unit||'ชิ้น')+'</div>') : '';
     var refLine = l.refQty ? ('<div class="meta">📦 จำนวนที่สั่งไว้: '+l.refQty+' '+(l.unit||'ชิ้น')+(bonus ? (' • 🎁 แถม '+bonus+' '+(l.unit||'ชิ้น')) : '')+'</div>') : '';
     return '<div class="label-item">'
@@ -2805,14 +2721,13 @@ function addLabel(){
     return;
   }
   var qty = document.getElementById('qty').value;
-  var orderNo = document.getElementById('orderNo').value.trim();
 
   if(!qty || Number(qty) <= 0){
     alert('กรอกจำนวนชิ้นก่อนนะคับ');
     return;
   }
 
-  labels.push({ itemName: info.itemName, meta: info.meta, sheetsInfo: info.sheetsInfo || '', refQty: info.refQty || null, perSheet: info.perSheet || null, designsInfo: info.designsInfo || '', qty: Number(qty), unit:'ชิ้น', orderNo: orderNo });
+  labels.push({ itemName: info.itemName, meta: info.meta, sheetsInfo: info.sheetsInfo || '', refQty: info.refQty || null, perSheet: info.perSheet || null, qty: Number(qty), unit:'ชิ้น' });
   save();
   render();
 
@@ -2827,17 +2742,41 @@ function clearAll(){
   if(confirm('ล้างรายการลาเบลทั้งหมดเลยไหมคับ?')){ labels=[]; save(); render(); }
 }
 
+/* คำนวณสเกลตัวอักษรของบล็อก "รายการ" ตามปริมาณข้อความ (ข้อมูลน้อย=ใหญ่ขึ้น, ข้อมูลเยอะ=หดลงเล็กน้อยกันทับ) */
+function computeLabelScale(l){
+  var metaTxt = [l.meta, l.sheetsInfo].filter(Boolean).join(' | ');
+  var PXCM = 240;
+  var W = 5*PXCM, H = 7*PXCM;
+  var canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  var ctx = canvas.getContext('2d');
+  var availableH = H*0.578 - H*0.195 - H*0.02;
+  function measureRequired(scale){
+    var nameLineH = H*0.052*scale;
+    ctx.font = '700 '+Math.round(H*0.040*scale)+'px OJMadeleine, Wakeup, sans-serif';
+    var nLines = wrapText(ctx, l.itemName, 0, 0, W*0.86, nameLineH, true);
+    var required = nameLineH*(1+nLines);
+    if(metaTxt) required += H*0.040*scale;
+    if(l.perSheet) required += H*0.048*scale;
+    if(l.refQty) required += H*0.048*scale;
+    return required;
+  }
+  var scale1 = Math.min(1.3, Math.max(0.8, availableH / measureRequired(1)));
+  var scale2 = Math.min(1.3, Math.max(0.8, availableH / measureRequired(scale1)));
+  return scale2;
+}
+
 function labelHtml(l){
   var bonus = (l.refQty && l.qty > l.refQty) ? (l.qty - l.refQty) : 0;
-  var metaTxt = [l.meta, l.sheetsInfo, l.designsInfo].filter(Boolean).join(' | ');
+  var metaTxt = [l.meta, l.sheetsInfo].filter(Boolean).join(' | ');
+  var s = computeLabelScale(l);
   return '<div class="label-sheet">'
     + '<img class="tmpl" src="'+pickTmplSrc(l.itemName)+'">'
     + '<div class="ov-name">'
-    + '<div class="name">'+escapeHtml(l.itemName)+'</div>'
-    + (metaTxt ? '<div class="meta">'+escapeHtml(metaTxt)+'</div>' : '')
-    + (l.perSheet ? '<div class="persheet">📐 จำนวนที่ได้ต่อแผ่น: '+l.perSheet+' '+(l.unit||'ชิ้น')+'</div>' : '')
-    + (l.refQty ? '<div class="persheet">📦 จำนวนที่สั่งไว้: '+l.refQty+' '+(l.unit||'ชิ้น')+'</div>' : '')
-    + (l.orderNo ? '<div class="order-no">#'+escapeHtml(l.orderNo)+'</div>' : '')
+    + '<div class="name" style="font-size:'+(0.40*s).toFixed(2)+'cm">'+escapeHtml(l.itemName)+'</div>'
+    + (metaTxt ? '<div class="meta" style="font-size:'+(0.26*s).toFixed(2)+'cm">'+escapeHtml(metaTxt)+'</div>' : '')
+    + (l.perSheet ? '<div class="persheet" style="font-size:'+(0.32*s).toFixed(2)+'cm">📐 จำนวนที่ได้ต่อแผ่น: '+l.perSheet+' '+(l.unit||'ชิ้น')+'</div>' : '')
+    + (l.refQty ? '<div class="persheet" style="font-size:'+(0.32*s).toFixed(2)+'cm">📦 จำนวนที่สั่งไว้: '+l.refQty+' '+(l.unit||'ชิ้น')+'</div>' : '')
     + '</div>'
     + '<div class="ov-qty">'
     + '<div><span class="extra-qty-num">'+l.qty+'</span><span class="extra-qty-unit"> '+(l.unit||'ชิ้น')+'</span></div>'
@@ -2894,7 +2833,7 @@ function ensureFontLoaded(){
   }
   return Promise.resolve();
 }
-function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+function wrapText(ctx, text, x, y, maxWidth, lineHeight, measureOnly){
   var words = String(text).split(' ');
   var line = '';
   var lines = [];
@@ -2908,8 +2847,10 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight){
     }
   }
   lines.push(line.trim());
-  for(var i=0;i<lines.length;i++){
-    ctx.fillText(lines[i], x, y + i*lineHeight);
+  if(!measureOnly){
+    for(var i=0;i<lines.length;i++){
+      ctx.fillText(lines[i], x, y + i*lineHeight);
+    }
   }
   return lines.length;
 }
@@ -2929,32 +2870,32 @@ function renderLabelCanvas(l){
     ctx.textBaseline = 'alphabetic';
 
     var leftX = W*0.08;
-    var metaTxt = [l.meta, l.sheetsInfo, l.designsInfo].filter(Boolean).join(' | ');
+    var metaTxt = [l.meta, l.sheetsInfo].filter(Boolean).join(' | ');
     var bonus = (l.refQty && l.qty > l.refQty) ? (l.qty - l.refQty) : 0;
+
+    // ----- คำนวณสเกลตัวอักษรตามปริมาณข้อความ (ข้อมูลน้อย = ตัวใหญ่ขึ้น, ข้อมูลเยอะ = ตัวหดลงเล็กน้อยกันทับ) -----
+    var scale = computeLabelScale(l);
 
     // ----- ช่องชื่อสินค้า (ใต้ป้าย "รายการ") -----
     var nameTop = H*0.195;
-    var nameLineH = H*0.052;
+    var nameLineH = H*0.052*scale;
     ctx.fillStyle = '#000';
-    ctx.font = '700 '+Math.round(H*0.040)+'px OJMadeleine, Wakeup, sans-serif';
+    ctx.font = '700 '+Math.round(H*0.040*scale)+'px OJMadeleine, Wakeup, sans-serif';
     var nLines = wrapText(ctx, l.itemName, leftX, nameTop + nameLineH, W*0.86, nameLineH);
     var afterNameY = nameTop + nameLineH + nLines*nameLineH;
 
-    ctx.font = Math.round(H*0.030)+'px OJMadeleine, Wakeup, sans-serif';
-    if(metaTxt){ ctx.fillText(metaTxt, leftX, afterNameY + H*0.012); afterNameY += H*0.040; }
+    ctx.font = Math.round(H*0.030*scale)+'px OJMadeleine, Wakeup, sans-serif';
+    if(metaTxt){ ctx.fillText(metaTxt, leftX, afterNameY + H*0.012*scale); afterNameY += H*0.040*scale; }
     if(l.perSheet){
-      ctx.font = '800 '+Math.round(H*0.036)+'px OJMadeleine, Wakeup, sans-serif';
-      ctx.fillText('📐 จำนวนที่ได้ต่อแผ่น: '+l.perSheet+' '+(l.unit||'ชิ้น'), leftX, afterNameY + H*0.020);
-      afterNameY += H*0.048;
+      ctx.font = '800 '+Math.round(H*0.036*scale)+'px OJMadeleine, Wakeup, sans-serif';
+      ctx.fillText('📐 จำนวนที่ได้ต่อแผ่น: '+l.perSheet+' '+(l.unit||'ชิ้น'), leftX, afterNameY + H*0.020*scale);
+      afterNameY += H*0.048*scale;
     }
     if(l.refQty){
-      ctx.font = '800 '+Math.round(H*0.036)+'px OJMadeleine, Wakeup, sans-serif';
-      ctx.fillText('📦 จำนวนที่สั่งไว้: '+l.refQty+' '+(l.unit||'ชิ้น'), leftX, afterNameY + H*0.020);
-      afterNameY += H*0.048;
+      ctx.font = '800 '+Math.round(H*0.036*scale)+'px OJMadeleine, Wakeup, sans-serif';
+      ctx.fillText('📦 จำนวนที่สั่งไว้: '+l.refQty+' '+(l.unit||'ชิ้น'), leftX, afterNameY + H*0.020*scale);
+      afterNameY += H*0.048*scale;
     }
-    ctx.font = Math.round(H*0.024)+'px OJMadeleine, Wakeup, sans-serif';
-    var orderTxt = l.orderNo ? ('#'+l.orderNo) : '';
-    if(orderTxt) ctx.fillText(orderTxt, leftX, afterNameY + H*0.020);
 
     // ----- ช่องจำนวน (ใต้ป้าย "จำนวนที่ได้") -----
     var qtyStr = String(l.qty);
@@ -3004,7 +2945,7 @@ function downloadCanvas(canvas, filename){
 function downloadOne(i){
   var l = labels[i];
   renderLabelCanvas(l).then(function(canvas){
-    var fname = 'label_'+sanitizeFilename(l.itemName)+(l.orderNo?('_'+l.orderNo):'')+'_'+(i+1)+'.png';
+    var fname = 'label_'+sanitizeFilename(l.itemName)+'_'+(i+1)+'.png';
     downloadCanvas(canvas, fname);
   });
 }
@@ -3015,7 +2956,7 @@ function downloadAll(){
     if(i >= labels.length) return;
     var l = labels[i];
     renderLabelCanvas(l).then(function(canvas){
-      var fname = 'label_'+sanitizeFilename(l.itemName)+(l.orderNo?('_'+l.orderNo):'')+'_'+(i+1)+'.png';
+      var fname = 'label_'+sanitizeFilename(l.itemName)+'_'+(i+1)+'.png';
       downloadCanvas(canvas, fname);
       i++;
       setTimeout(next, 350);
